@@ -1,0 +1,296 @@
+* General Helpers
+** Straight.el package manager
+   
+  #+BEGIN_SRC emacs-lisp
+    ;; install straight.el
+    (defvar bootstrap-version)
+    (let ((bootstrap-file
+	   (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	  (bootstrap-version 5))
+      (unless (file-exists-p bootstrap-file)
+	(with-current-buffer
+	    (url-retrieve-synchronously
+	     "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	     'silent 'inhibit-cookies)
+	  (goto-char (point-max))
+	  (eval-print-last-sexp)))
+      (load bootstrap-file nil 'nomessage))
+
+    ;; install use-package
+    (straight-use-package 'use-package)
+
+    ;; configure use-package to use straight.el
+    (use-package straight
+		 :custom (straight-use-package-by-default t))
+    ;; ensure always on
+    (setq use-package-always-ensure t)
+  #+END_SRC
+
+** Counsel
+
+   #+begin_src emacs-lisp
+    (use-package counsel
+      :bind (("M-x" . counsel-M-x)
+	     ("C-x b" . counsel-ibuffer)
+	     ("C-x C-f" . counsel-find-file)
+	     :map minibuffer-local-map
+	     ("C-r" . 'counsel-minibuffer-history)))
+   #+end_src
+
+** Ivy completion
+   Start by installing ivy and add good key bindings
+
+   #+begin_src emacs-lisp
+    (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper)
+	     :map ivy-minibuffer-map
+	     ("TAB" . ivy-alt-done)
+	     ("C-l" . ivy-alt-done)
+	     ("C-j" . ivy-next-line)
+	     ("C-k" . ivy-previous-line)
+	     :map ivy-switch-buffer-map
+	     ("C-l" . ivy-done))
+      :config
+      (ivy-mode 1))
+     #+end_src
+
+    Install ivy-rich
+    #+begin_src emacs-lisp
+     (use-package ivy-rich
+       :init
+       (ivy-rich-mode 1))
+    #+end_src
+
+** Which key (cool popup for available commands)
+
+   #+BEGIN_SRC emacs-lisp
+   (use-package which-key
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 0.3))
+   #+END_SRC
+
+** Helpful package
+
+  #+begin_src emacs-lisp
+    (use-package helpful
+      :custom
+      (counsel-describe-function-function #'helpful-callable)
+      (counsel-describe-variable-function #'helpful-variable)
+      :bind
+      ([remap describe-function] . counsel-describe-function)
+      ([remap describe-command] . helpful-command)
+      ([remap describe-variable] . counsel-describe-variable)
+      ([remap describe-key] . helpful-key))
+  #+end_src 
+
+** Vterm
+
+#+begin_src emacs-lisp
+ (use-package vterm) 
+#+end_src
+
+* UI
+** Disable unecessary defaults
+
+  #+BEGIN_SRC emacs-lisp
+
+    ;; disable the start-up screen greeter
+    (setq inhibit-startup-message t)
+
+    ;; disable unneccessary modes
+    (menu-bar-mode -1)
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1)
+    ;; add line numbers
+    (column-number-mode)
+    (global-display-line-numbers-mode 1)
+    (dolist (mode '(term-mode-hook
+		    vterm-mode-hook
+		    eshell-mode-hook))
+      (add-hook mode (lambda () (display-line-numbers-mode 0))))
+  #+END_SRC
+  
+** Set Theme
+   
+  #+BEGIN_SRC emacs-lisp
+      (use-package doom-themes
+	:ensure t
+	:config
+	;; Global settings (defaults)
+	;(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	    ;  doom-themes-enable-italic t) ; if nil, italics is universally disabled
+	(load-theme 'doom-spacegrey t)
+
+	;; Enable flashing mode-line on errors
+	(doom-themes-visual-bell-config)
+	;; Enable custom neotree theme (all-the-icons must be installed!)
+	(doom-themes-neotree-config)
+	;; Corrects (and improves) org-mode's native fontification.
+	(doom-themes-org-config))
+   #+END_SRC
+  
+** Font
+   
+  #+BEGIN_SRC emacs-lisp
+    (use-package treemacs-evil
+     :after (treemacs evil)
+     :ensure t) ;; set font to FiraCode
+     (set-frame-font "Fira Code-13" nil t)
+
+     ;; font ligature
+     (use-package ligature
+     :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+     :config
+     ;; Enable the "www" ligature in every possible major mode
+     (ligature-set-ligatures 't '("www"))
+     ;; Enable traditional ligature support in eww-mode, if the
+     ;; `variable-pitch' face supports it
+     (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+     ;; Enable all Cascadia Code ligatures in programming modes
+     (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+					  ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+					  "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+					  "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+					  "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+					  "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+					  "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+					  "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+					  ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+					  "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+					  "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+					  "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+					  "\\\\" "://"))
+     ;; Enables ligature checks globally in all buffers. You can also do it
+     ;; per mode with `ligature-mode'.
+     (global-ligature-mode t))
+  #+END_SRC
+  
+** Indentation management
+
+   #+BEGIN_SRC emacs-lisp
+     ;; ; START TABS CONFIG
+     ;; ;; Create a variable for our preferred tab width
+     ;; (setq custom-tab-width 2)
+
+     ;; ;; Two callable functions for enabling/disabling tabs in Emacs
+     ;; (defun disable-tabs () (setq indent-tabs-mode nil))
+     ;; (defun enable-tabs  ()
+     ;;   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
+     ;;   (setq indent-tabs-mode t)
+     ;;   (setq tab-width custom-tab-width))
+
+     ;; ;; Hooks to Enable Tabs
+     ;; (add-hook 'prog-mode-hook 'enable-tabs)
+     ;; ;; Hooks to Disable Tabs
+     ;; (add-hook 'lisp-mode-hook 'disable-tabs)
+     ;; (add-hook 'emacs-lisp-mode-hook 'disable-tabs)
+
+     ;; ;; Language-Specific Tweaks
+     ;; (setq-default python-indent-offset custom-tab-width) ;; Python
+     ;; (setq-default js-indent-level custom-tab-width)      ;; Javascript
+
+     ;; ;; Making electric-indent behave sanely
+     ;; (setq-default electric-indent-inhibit t)
+
+     ;; ;; Make the backspace properly erase the tab instead of
+     ;; ;; removing 1 space at a time.
+     ;; (setq backward-delete-char-untabify-method 'hungry)
+     ;; ;; This will also show trailing characters as they are useful to spot.
+     ;; (setq whitespace-style '(face tabs tab-mark trailing))
+     ;; (custom-set-faces
+     ;;  '(whitespace-tab ((t (:foreground "#636363")))))
+     ;; (setq whitespace-display-mappings
+     ;;   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
+     ;; (global-whitespace-mode) ; Enable whitespace mode everywhere
+     ; END TABS CONFIG
+   #+END_SRC
+   
+** Mode line
+   #+BEGIN_SRC emacs-lisp
+     (use-package doom-modeline
+       :ensure t
+       :init (doom-modeline-mode 1)
+       :custom ((doom-modeline-height 13)))
+     (use-package all-the-icons
+       :if (display-graphic-p))
+   #+END_SRC
+   
+** Smart Parenthesis
+* Org Mode
+** Install Org bullets
+   
+  #+BEGIN_SRC emacs-lisp
+    ;; org bullet
+     (use-package org-bullets
+       :hook (org-mode . org-bullets-mode)
+       :custom
+       (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+     (setq org-ellipsis " ▾")
+  #+END_SRC
+
+* Programming Helpers
+** yasnippet 
+
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :config
+    (yas-load-directory "/usr/share/emacs/site-lisp/yasnippet-snippets/snippets")
+    (yas-global-mode 1))
+
+#+end_src
+
+** projectile
+
+#+begin_src emacs-lisp
+  (use-package projectile
+    :bind (("C-c p" . projectile-command-map))
+    :config
+    (projectile-mode +1))
+#+end_src
+
+* Evil Mode
+
+    #+begin_src emacs-lisp
+    (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+
+    (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
+    #+end_src
+* NeoTree
+
+#+begin_src emacs-lisp
+  (use-package neotree
+     :ensure t
+     :bind("C-x t t" . neotree-toggle))
+#+end_src
+* Python
+
+#+begin_src emacs-lisp
+ (use-package elpy
+  :ensure t
+  :defer t
+  :init
+  (advice-add 'python-mode :before 'elpy-enable)) 
+#+end_src
+
