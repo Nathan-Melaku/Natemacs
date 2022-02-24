@@ -169,45 +169,22 @@
   #+END_SRC
   
 ** Indentation management
-
+   set tab width to 4 spaces and force cc-mode and perl-mode use tab width
    #+BEGIN_SRC emacs-lisp
-     ;; ; START TABS CONFIG
-     ;; ;; Create a variable for our preferred tab width
-     ;; (setq custom-tab-width 2)
-
-     ;; ;; Two callable functions for enabling/disabling tabs in Emacs
-     ;; (defun disable-tabs () (setq indent-tabs-mode nil))
-     ;; (defun enable-tabs  ()
-     ;;   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
-     ;;   (setq indent-tabs-mode t)
-     ;;   (setq tab-width custom-tab-width))
-
-     ;; ;; Hooks to Enable Tabs
-     ;; (add-hook 'prog-mode-hook 'enable-tabs)
-     ;; ;; Hooks to Disable Tabs
-     ;; (add-hook 'lisp-mode-hook 'disable-tabs)
-     ;; (add-hook 'emacs-lisp-mode-hook 'disable-tabs)
-
-     ;; ;; Language-Specific Tweaks
-     ;; (setq-default python-indent-offset custom-tab-width) ;; Python
-     ;; (setq-default js-indent-level custom-tab-width)      ;; Javascript
-
-     ;; ;; Making electric-indent behave sanely
-     ;; (setq-default electric-indent-inhibit t)
-
-     ;; ;; Make the backspace properly erase the tab instead of
-     ;; ;; removing 1 space at a time.
-     ;; (setq backward-delete-char-untabify-method 'hungry)
-     ;; ;; This will also show trailing characters as they are useful to spot.
-     ;; (setq whitespace-style '(face tabs tab-mark trailing))
-     ;; (custom-set-faces
-     ;;  '(whitespace-tab ((t (:foreground "#636363")))))
-     ;; (setq whitespace-display-mappings
-     ;;   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
-     ;; (global-whitespace-mode) ; Enable whitespace mode everywhere
-     ; END TABS CONFIG
+     (setq tab-width 4)
+     (defvaralias 'c-basic-offset 'tab-width)
+     (defvaralias 'cperl-indent-level 'tab-width)
    #+END_SRC
-   
+
+   install and configure smart-tabs
+
+   #+begin_src emacs-lisp
+     (use-package smart-tabs-mode
+       :config
+       (smart-tabs-insinuate 'c 'javascript 'python))
+
+   #+end_src
+
 ** Mode line
    #+BEGIN_SRC emacs-lisp
      (use-package doom-modeline
@@ -230,7 +207,7 @@
        (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
      (setq org-ellipsis " ▾")
   #+END_SRC
-
+  
 * Programming Helpers
 ** yasnippet 
 
@@ -293,4 +270,10 @@
   :init
   (advice-add 'python-mode :before 'elpy-enable)) 
 #+end_src
+* Docker
+
+#+begin_src emacs-lisp
+  (use-package dockerfile-mode)
+#+end_src
+
 
