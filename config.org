@@ -111,8 +111,15 @@
 		    vterm-mode-hook
 		    eshell-mode-hook))
       (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
   #+END_SRC
-  
+** Transparency
+
+#+begin_src emacs-lisp
+ (set-frame-parameter (selected-frame) 'alpha '(95 . 50))
+ (add-to-list 'default-frame-alist '(alpha . (95 . 50)))
+#+end_src
+
 ** Set Theme
    
   #+BEGIN_SRC emacs-lisp
@@ -136,36 +143,37 @@
    
   #+BEGIN_SRC emacs-lisp
     (use-package treemacs-evil
-     :after (treemacs evil)
-     :ensure t) ;; set font to FiraCode
-     (set-frame-font "Fira Code-13" nil t)
+      :after (treemacs evil)
+      :ensure t) ;; set font to FiraCode
+    (add-to-list 'default-frame-alist '(font . "Fira Code-13"))
+    ;;(set-frame-font "Fira Code-13" nil t)
 
-     ;; font ligature
-     (use-package ligature
-     :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
-     :config
-     ;; Enable the "www" ligature in every possible major mode
-     (ligature-set-ligatures 't '("www"))
-     ;; Enable traditional ligature support in eww-mode, if the
-     ;; `variable-pitch' face supports it
-     (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
-     ;; Enable all Cascadia Code ligatures in programming modes
-     (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-					  ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-					  "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-					  "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-					  "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-					  "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-					  "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-					  "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-					  ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-					  "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-					  "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-					  "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-					  "\\\\" "://"))
-     ;; Enables ligature checks globally in all buffers. You can also do it
-     ;; per mode with `ligature-mode'.
-     (global-ligature-mode t))
+    ;; font ligature
+    (use-package ligature
+      :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+      :config
+      ;; Enable the "www" ligature in every possible major mode
+      (ligature-set-ligatures 't '("www"))
+      ;; Enable traditional ligature support in eww-mode, if the
+      ;; `variable-pitch' face supports it
+      (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+      ;; Enable all Cascadia Code ligatures in programming modes
+      (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+					   ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+					   "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+					   "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+					   "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+					   "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+					   "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+					   "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+					   ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+					   "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+					   "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+					   "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+					   "\\\\" "://"))
+      ;; Enables ligature checks globally in all buffers. You can also do it
+      ;; per mode with `ligature-mode'.
+      (global-ligature-mode t))
   #+END_SRC
   
 ** Indentation management
@@ -254,26 +262,194 @@
     :config
     (evil-collection-init))
     #+end_src
-* NeoTree
+* Treemacs
 
 #+begin_src emacs-lisp
-  (use-package neotree
-     :ensure t
-     :bind("C-x t t" . neotree-toggle))
-#+end_src
-* Python
+    (use-package treemacs
+    :ensure t
+    :defer t
+    :init
+    (with-eval-after-load 'winum
+      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+    :config
+    (progn
+      (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+	    treemacs-deferred-git-apply-delay        0.5
+	    treemacs-directory-name-transformer      #'identity
+	    treemacs-display-in-side-window          t
+	    treemacs-eldoc-display                   'simple
+	    treemacs-file-event-delay                5000
+	    treemacs-file-extension-regex            treemacs-last-period-regex-value
+	    treemacs-file-follow-delay               0.2
+	    treemacs-file-name-transformer           #'identity
+	    treemacs-follow-after-init               t
+	    treemacs-expand-after-init               t
+	    treemacs-find-workspace-method           'find-for-file-or-pick-first
+	    treemacs-git-command-pipe                ""
+	    treemacs-goto-tag-strategy               'refetch-index
+	    treemacs-indentation                     2
+	    treemacs-indentation-string              " "
+	    treemacs-is-never-other-window           nil
+	    treemacs-max-git-entries                 5000
+	    treemacs-missing-project-action          'ask
+	    treemacs-move-forward-on-expand          nil
+	    treemacs-no-png-images                   nil
+	    treemacs-no-delete-other-windows         t
+	    treemacs-project-follow-cleanup          nil
+	    treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+	    treemacs-position                        'left
+	    treemacs-read-string-input               'from-child-frame
+	    treemacs-recenter-distance               0.1
+	    treemacs-recenter-after-file-follow      nil
+	    treemacs-recenter-after-tag-follow       nil
+	    treemacs-recenter-after-project-jump     'always
+	    treemacs-recenter-after-project-expand   'on-distance
+	    treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+	    treemacs-show-cursor                     nil
+	    treemacs-show-hidden-files               t
+	    treemacs-silent-filewatch                nil
+	    treemacs-silent-refresh                  nil
+	    treemacs-sorting                         'alphabetic-asc
+	    treemacs-select-when-already-in-treemacs 'move-back
+	    treemacs-space-between-root-nodes        t
+	    treemacs-tag-follow-cleanup              t
+	    treemacs-tag-follow-delay                1.5
+	    treemacs-text-scale                      nil
+	    treemacs-user-mode-line-format           nil
+	    treemacs-user-header-line-format         nil
+	    treemacs-wide-toggle-width               70
+	    treemacs-width                           35
+	    treemacs-width-increment                 1
+	    treemacs-width-is-initially-locked       t
+	    treemacs-workspace-switch-cleanup        nil)
 
-#+begin_src emacs-lisp
- (use-package elpy
-  :ensure t
-  :defer t
-  :init
-  (advice-add 'python-mode :before 'elpy-enable)) 
+      ;; The default width and height of the icons is 22 pixels. If you are
+      ;; using a Hi-DPI display, uncomment this to double the icon size.
+      ;;(treemacs-resize-icons 44)
+
+      (treemacs-follow-mode t)
+      (treemacs-filewatch-mode t)
+      (treemacs-fringe-indicator-mode 'always)
+
+      (pcase (cons (not (null (executable-find "git")))
+		   (not (null treemacs-python-executable)))
+	(`(t . t)
+	 (treemacs-git-mode 'deferred))
+	(`(t . _)
+	 (treemacs-git-mode 'simple)))
+
+      (treemacs-hide-gitignored-files-mode nil))
+    :bind
+    (:map global-map
+	  ("M-0"       . treemacs-select-window)
+	  ("C-x t 1"   . treemacs-delete-other-windows)
+	  ("C-x t t"   . treemacs)
+	  ("C-x t d"   . treemacs-select-directory)
+	  ("C-x t B"   . treemacs-bookmark)
+	  ("C-x t C-t" . treemacs-find-file)
+	  ("C-x t M-t" . treemacs-find-tag)))
+
+  (use-package treemacs-evil
+    :after (treemacs evil)
+    :ensure t)
+
+  (use-package treemacs-projectile
+    :after (treemacs projectile)
+    :ensure t)
+
+  (use-package treemacs-icons-dired
+    :hook (dired-mode . treemacs-icons-dired-enable-once)
+    :ensure t)
+
+  ;; (use-package treemacs-magit
+  ;;   :after (treemacs magit)
+  ;;   :ensure t)
 #+end_src
+* Programming modes
+** Python
+
+set python shell interpreter to python this is version 3
+#+begin_src emacs-lisp
+  (use-package python-mode
+    :ensure nil
+    :custom
+    (python-shell-interpreter "python"))
+#+end_src
+
+** Lsp-mode
+
+language server support
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :hook (python-mode . lsp)
+    (lsp-mode . lsp-enable-which-key-integration))
+
+  (use-package lsp-ivy
+    :commands lsp-ivy-workspace-symbol)
+  (use-package lsp-treemacs)
+#+end_src
+
+** Better syntax highlighting
+#+begin_src emacs-lisp
+  (use-package tree-sitter)
+  (use-package tree-sitter-langs)
+
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+#+end_src
+
+** Company frontend
+#+begin_src emacs-lisp
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
+
+** flycheck 
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
+#+end_src
+
 * Docker
 
 #+begin_src emacs-lisp
   (use-package dockerfile-mode)
+#+end_src
+
+* Latex
+** language server support
+
+#+begin_src emacs-lisp
+ (use-package lsp-latex)
+#+end_src
+** AUCTEX
+
+#+begin_src emacs-lisp
+  (load "auctex.el" nil t t)
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+
+  (setq-default TeX-master nil)
+
+  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  (add-hook 'LaTeX-mode-hook 'lsp)
+  (add-hook 'bibtex-mode-hook 'lsp)
+
+
+  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+  (setq reftex-plug-into-AUCTeX t)
+#+end_src
+
+** cdlatex
+
+#+begin_src emacs-lisp
+  (use-package cdlatex)
+  (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
 #+end_src
 
 
