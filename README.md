@@ -1,0 +1,552 @@
+
+# Table of Contents
+
+1.  [General Helpers](#org21832d9)
+    1.  [Straight.el package manager](#org5910196)
+    2.  [Counsel](#orge7fdb36)
+    3.  [Ivy completion](#orgfab8e84)
+    4.  [Which key (cool popup for available commands)](#org594b475)
+    5.  [Helpful package](#orgb04e8ff)
+    6.  [Vterm](#org497b72c)
+2.  [UI](#org3873e34)
+    1.  [Disable unecessary defaults](#orgc2a2e5d)
+    2.  [Transparency](#org9f32844)
+    3.  [Set Theme](#org04a540c)
+    4.  [Font](#org7f7f329)
+    5.  [Indentation management](#org220d550)
+    6.  [Mode line](#orgdad591d)
+    7.  [Smart Parenthesis](#orge32f959)
+3.  [Org Mode](#orgc70c55e)
+    1.  [Install Org bullets](#org7fecd67)
+4.  [Programming Helpers](#org4c2b050)
+    1.  [yasnippet](#org7809244)
+    2.  [projectile](#orgd0867df)
+5.  [Evil Mode](#org26cd42f)
+6.  [Treemacs](#org3ab3b75)
+7.  [Programming modes](#orgf34ef63)
+    1.  [Python](#orgce19114)
+    2.  [Lsp-mode](#orgfffaea3)
+    3.  [Better syntax highlighting](#org63cd57c)
+    4.  [Company frontend](#orge832025)
+    5.  [flycheck](#org1c365aa)
+8.  [Docker](#orgb9048e9)
+9.  [Latex](#org794c52d)
+    1.  [language server support](#org816b8d4)
+    2.  [AUCTEX](#org25b3d7f)
+    3.  [cdlatex](#orgf58dfbe)
+
+
+<a id="org21832d9"></a>
+
+# General Helpers
+
+
+<a id="org5910196"></a>
+
+## Straight.el package manager
+
+    ;; install straight.el
+    (defvar bootstrap-version)
+    (let ((bootstrap-file
+           (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+          (bootstrap-version 5))
+      (unless (file-exists-p bootstrap-file)
+        (with-current-buffer
+    	(url-retrieve-synchronously
+    	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+    	 'silent 'inhibit-cookies)
+          (goto-char (point-max))
+          (eval-print-last-sexp)))
+      (load bootstrap-file nil 'nomessage))
+    
+    ;; install use-package
+    (straight-use-package 'use-package)
+    
+    ;; configure use-package to use straight.el
+    (use-package straight
+    	     :custom (straight-use-package-by-default t))
+    ;; ensure always on
+    (setq use-package-always-ensure t)
+
+
+<a id="orge7fdb36"></a>
+
+## Counsel
+
+    (use-package counsel
+      :bind (("M-x" . counsel-M-x)
+    	 ("C-x b" . counsel-ibuffer)
+    	 ("C-x C-f" . counsel-find-file)
+    	 :map minibuffer-local-map
+    	 ("C-r" . 'counsel-minibuffer-history)))
+
+
+<a id="orgfab8e84"></a>
+
+## Ivy completion
+
+Start by installing ivy and add good key bindings
+
+    (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper)
+    	 :map ivy-minibuffer-map
+    	 ("TAB" . ivy-alt-done)
+    	 ("C-l" . ivy-alt-done)
+    	 ("C-j" . ivy-next-line)
+    	 ("C-k" . ivy-previous-line)
+    	 :map ivy-switch-buffer-map
+    	 ("C-l" . ivy-done))
+      :config
+      (ivy-mode 1))
+
+Install ivy-rich
+
+    (use-package ivy-rich
+      :init
+      (ivy-rich-mode 1))
+
+
+<a id="org594b475"></a>
+
+## Which key (cool popup for available commands)
+
+    (use-package which-key
+     :init (which-key-mode)
+     :diminish which-key-mode
+     :config
+     (setq which-key-idle-delay 0.3))
+
+
+<a id="orgb04e8ff"></a>
+
+## Helpful package
+
+    (use-package helpful
+      :custom
+      (counsel-describe-function-function #'helpful-callable)
+      (counsel-describe-variable-function #'helpful-variable)
+      :bind
+      ([remap describe-function] . counsel-describe-function)
+      ([remap describe-command] . helpful-command)
+      ([remap describe-variable] . counsel-describe-variable)
+      ([remap describe-key] . helpful-key))
+
+
+<a id="org497b72c"></a>
+
+## Vterm
+
+    (use-package vterm) 
+
+
+<a id="org3873e34"></a>
+
+# UI
+
+
+<a id="orgc2a2e5d"></a>
+
+## Disable unecessary defaults
+
+    
+    ;; disable the start-up screen greeter
+    (setq inhibit-startup-message t)
+    
+    ;; disable unneccessary modes
+    (menu-bar-mode -1)
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1)
+    ;; add line numbers
+    (column-number-mode)
+    (global-display-line-numbers-mode 1)
+    (dolist (mode '(term-mode-hook
+    		vterm-mode-hook
+    		eshell-mode-hook))
+      (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+
+<a id="org9f32844"></a>
+
+## Transparency
+
+    (set-frame-parameter (selected-frame) 'alpha '(95 . 80))
+    (add-to-list 'default-frame-alist '(alpha . (95 . 80)))
+
+
+<a id="org04a540c"></a>
+
+## Set Theme
+
+    (use-package doom-themes
+      :ensure t
+      :config
+      ;; Global settings (defaults)
+      ;(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          ;  doom-themes-enable-italic t) ; if nil, italics is universally disabled
+      (load-theme 'doom-spacegrey t)
+    
+      ;; Enable flashing mode-line on errors
+      (doom-themes-visual-bell-config)
+      ;; Enable custom neotree theme (all-the-icons must be installed!)
+      (doom-themes-neotree-config)
+      ;; Corrects (and improves) org-mode's native fontification.
+      (doom-themes-org-config))
+
+
+<a id="org7f7f329"></a>
+
+## Font
+
+    (use-package treemacs-evil
+      :after (treemacs evil)
+      :ensure t) ;; set font to FiraCode
+    (add-to-list 'default-frame-alist '(font . "Fira Code-13"))
+    ;;(set-frame-font "Fira Code-13" nil t)
+    
+    ;; font ligature
+    (use-package ligature
+      :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+      :config
+      ;; Enable the "www" ligature in every possible major mode
+      (ligature-set-ligatures 't '("www"))
+      ;; Enable traditional ligature support in eww-mode, if the
+      ;; `variable-pitch' face supports it
+      (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+      ;; Enable all Cascadia Code ligatures in programming modes
+      (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+    				       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+    				       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+    				       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+    				       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+    				       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+    				       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+    				       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+    				       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+    				       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+    				       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+    				       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+    				       "\\\\" "://"))
+      ;; Enables ligature checks globally in all buffers. You can also do it
+      ;; per mode with `ligature-mode'.
+      (global-ligature-mode t))
+
+
+<a id="org220d550"></a>
+
+## Indentation management
+
+set tab width to 4 spaces and force cc-mode and perl-mode use tab width
+
+    (setq tab-width 4)
+    (defvaralias 'c-basic-offset 'tab-width)
+    (defvaralias 'cperl-indent-level 'tab-width)
+
+install and configure smart-tabs
+
+    (use-package smart-tabs-mode
+      :config
+      (smart-tabs-insinuate 'c 'javascript 'python))
+
+
+<a id="orgdad591d"></a>
+
+## Mode line
+
+    (use-package doom-modeline
+      :ensure t
+      :init (doom-modeline-mode 1)
+      :custom ((doom-modeline-height 13)))
+    (use-package all-the-icons
+      :if (display-graphic-p))
+
+
+<a id="orge32f959"></a>
+
+## Smart Parenthesis
+
+
+<a id="orgc70c55e"></a>
+
+# Org Mode
+
+
+<a id="org7fecd67"></a>
+
+## Install Org bullets
+
+    ;; org bullet
+     (use-package org-bullets
+       :hook (org-mode . org-bullets-mode)
+       :custom
+       (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+     (setq org-ellipsis " ▾")
+
+
+<a id="org4c2b050"></a>
+
+# Programming Helpers
+
+
+<a id="org7809244"></a>
+
+## yasnippet
+
+    (use-package yasnippet
+      :config
+      (yas-load-directory "/usr/share/emacs/site-lisp/yasnippet-snippets/snippets")
+      (yas-global-mode 1))
+
+
+<a id="orgd0867df"></a>
+
+## projectile
+
+    (use-package projectile
+      :bind (("C-c p" . projectile-command-map))
+      :config
+      (projectile-mode +1))
+
+
+<a id="org26cd42f"></a>
+
+# Evil Mode
+
+    (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+    
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+    
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+    
+    (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
+
+
+<a id="org3ab3b75"></a>
+
+# Treemacs
+
+      (use-package treemacs
+      :ensure t
+      :defer t
+      :init
+      (with-eval-after-load 'winum
+        (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+      :config
+      (progn
+        (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+    	  treemacs-deferred-git-apply-delay        0.5
+    	  treemacs-directory-name-transformer      #'identity
+    	  treemacs-display-in-side-window          t
+    	  treemacs-eldoc-display                   'simple
+    	  treemacs-file-event-delay                5000
+    	  treemacs-file-extension-regex            treemacs-last-period-regex-value
+    	  treemacs-file-follow-delay               0.2
+    	  treemacs-file-name-transformer           #'identity
+    	  treemacs-follow-after-init               t
+    	  treemacs-expand-after-init               t
+    	  treemacs-find-workspace-method           'find-for-file-or-pick-first
+    	  treemacs-git-command-pipe                ""
+    	  treemacs-goto-tag-strategy               'refetch-index
+    	  treemacs-indentation                     2
+    	  treemacs-indentation-string              " "
+    	  treemacs-is-never-other-window           nil
+    	  treemacs-max-git-entries                 5000
+    	  treemacs-missing-project-action          'ask
+    	  treemacs-move-forward-on-expand          nil
+    	  treemacs-no-png-images                   nil
+    	  treemacs-no-delete-other-windows         t
+    	  treemacs-project-follow-cleanup          nil
+    	  treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+    	  treemacs-position                        'left
+    	  treemacs-read-string-input               'from-child-frame
+    	  treemacs-recenter-distance               0.1
+    	  treemacs-recenter-after-file-follow      nil
+    	  treemacs-recenter-after-tag-follow       nil
+    	  treemacs-recenter-after-project-jump     'always
+    	  treemacs-recenter-after-project-expand   'on-distance
+    	  treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+    	  treemacs-show-cursor                     nil
+    	  treemacs-show-hidden-files               t
+    	  treemacs-silent-filewatch                nil
+    	  treemacs-silent-refresh                  nil
+    	  treemacs-sorting                         'alphabetic-asc
+    	  treemacs-select-when-already-in-treemacs 'move-back
+    	  treemacs-space-between-root-nodes        t
+    	  treemacs-tag-follow-cleanup              t
+    	  treemacs-tag-follow-delay                1.5
+    	  treemacs-text-scale                      nil
+    	  treemacs-user-mode-line-format           nil
+    	  treemacs-user-header-line-format         nil
+    	  treemacs-wide-toggle-width               70
+    	  treemacs-width                           35
+    	  treemacs-width-increment                 1
+    	  treemacs-width-is-initially-locked       t
+    	  treemacs-workspace-switch-cleanup        nil)
+    
+        ;; The default width and height of the icons is 22 pixels. If you are
+        ;; using a Hi-DPI display, uncomment this to double the icon size.
+        ;;(treemacs-resize-icons 44)
+    
+        (treemacs-follow-mode t)
+        (treemacs-filewatch-mode t)
+        (treemacs-fringe-indicator-mode 'always)
+    
+        (pcase (cons (not (null (executable-find "git")))
+    		 (not (null treemacs-python-executable)))
+          (`(t . t)
+           (treemacs-git-mode 'deferred))
+          (`(t . _)
+           (treemacs-git-mode 'simple)))
+    
+        (treemacs-hide-gitignored-files-mode nil))
+      :bind
+      (:map global-map
+    	("M-0"       . treemacs-select-window)
+    	("C-x t 1"   . treemacs-delete-other-windows)
+    	("C-x t t"   . treemacs)
+    	("C-x t d"   . treemacs-select-directory)
+    	("C-x t B"   . treemacs-bookmark)
+    	("C-x t C-t" . treemacs-find-file)
+    	("C-x t M-t" . treemacs-find-tag)))
+    
+    (use-package treemacs-evil
+      :after (treemacs evil)
+      :ensure t)
+    
+    (use-package treemacs-projectile
+      :after (treemacs projectile)
+      :ensure t)
+    
+    (use-package treemacs-icons-dired
+      :hook (dired-mode . treemacs-icons-dired-enable-once)
+      :ensure t)
+    
+    ;; (use-package treemacs-magit
+    ;;   :after (treemacs magit)
+    ;;   :ensure t)
+
+
+<a id="orgf34ef63"></a>
+
+# Programming modes
+
+
+<a id="orgce19114"></a>
+
+## Python
+
+set python shell interpreter to python this is version 3
+
+    (use-package python-mode
+      :ensure nil
+      :custom
+      (python-shell-interpreter "python"))
+
+
+<a id="orgfffaea3"></a>
+
+## Lsp-mode
+
+language server support
+
+    (use-package lsp-mode
+      :init
+      (setq lsp-keymap-prefix "C-c l")
+      :hook (python-mode . lsp)
+      (lsp-mode . lsp-enable-which-key-integration))
+    
+    (use-package lsp-ivy
+      :commands lsp-ivy-workspace-symbol)
+    (use-package lsp-treemacs)
+
+
+<a id="org63cd57c"></a>
+
+## Better syntax highlighting
+
+    (use-package tree-sitter)
+    (use-package tree-sitter-langs)
+    
+    (global-tree-sitter-mode)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+
+<a id="orge832025"></a>
+
+## Company frontend
+
+    (use-package company-box
+      :hook (company-mode . company-box-mode))
+
+
+<a id="org1c365aa"></a>
+
+## flycheck
+
+    (use-package flycheck
+      :ensure t
+      :init (global-flycheck-mode))
+
+
+<a id="orgb9048e9"></a>
+
+# Docker
+
+    (use-package dockerfile-mode)
+
+
+<a id="org794c52d"></a>
+
+# Latex
+
+
+<a id="org816b8d4"></a>
+
+## language server support
+
+    (use-package lsp-latex)
+
+
+<a id="org25b3d7f"></a>
+
+## AUCTEX
+
+    (load "auctex.el" nil t t)
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    
+    (setq-default TeX-master nil)
+    
+    (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+    (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+    (add-hook 'LaTeX-mode-hook 'lsp)
+    (add-hook 'bibtex-mode-hook 'lsp)
+    
+    
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+    (setq reftex-plug-into-AUCTeX t)
+
+
+<a id="orgf58dfbe"></a>
+
+## cdlatex
+
+    (use-package cdlatex)
+    (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
+
