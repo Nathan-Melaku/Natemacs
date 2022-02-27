@@ -1,6 +1,6 @@
 * General Helpers
 ** Straight.el package manager
-   
+
   #+BEGIN_SRC emacs-lisp
     ;; install straight.el
     (defvar bootstrap-version)
@@ -19,77 +19,125 @@
     ;; install use-package
     (straight-use-package 'use-package)
 
-    ;; configure use-package to use straight.el
-    (use-package straight
-		 :custom (straight-use-package-by-default t))
     ;; ensure always on
     (setq use-package-always-ensure t)
   #+END_SRC
+** Vertico
+*** general init
 
-** Counsel
+  #+begin_src emacs-lisp
+    (use-package vertico
+      :straight t
+      :init
+      (vertico-mode)
 
-   #+begin_src emacs-lisp
-    (use-package counsel
-      :bind (("M-x" . counsel-M-x)
-	     ("C-x b" . counsel-ibuffer)
-	     ("C-x C-f" . counsel-find-file)
-	     :map minibuffer-local-map
-	     ("C-r" . 'counsel-minibuffer-history)))
-   #+end_src
+      ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+      (setq vertico-cycle t))
+  #+end_src
 
-** Ivy completion
-   Start by installing ivy and add good key bindings
+*** Orderless
 
-   #+begin_src emacs-lisp
-    (use-package ivy
-      :diminish
-      :bind (("C-s" . swiper)
-	     :map ivy-minibuffer-map
-	     ("TAB" . ivy-alt-done)
-	     ("C-l" . ivy-alt-done)
-	     ("C-j" . ivy-next-line)
-	     ("C-k" . ivy-previous-line)
-	     :map ivy-switch-buffer-map
-	     ("C-l" . ivy-done))
-      :config
-      (ivy-mode 1))
-     #+end_src
+#+begin_src emacs-lisp
+  (use-package orderless
+    :straight t
+    :init
+    (setq completion-styles '(orderless)
+	  completion-category-defaults nil
+	  completion-category-overrides '((file (styles partial-completion)))))
 
-    Install ivy-rich
-    #+begin_src emacs-lisp
-     (use-package ivy-rich
-       :init
-       (ivy-rich-mode 1))
-    #+end_src
+#+end_src
+
+*** Save History
+
+#+begin_src emacs-lisp
+  (use-package savehist
+    :straight t
+    :init
+    (savehist-mode))
+#+end_src
+
+*** Marginalia
+
+#+begin_src emacs-lisp
+  ;; Enable richer annotations using the Marginalia package
+  (use-package marginalia
+    :straight t
+    ;; Either bind `marginalia-cycle` globally or only in the minibuffer
+    :bind (("M-A" . marginalia-cycle)
+	   :map minibuffer-local-map
+	   ("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode))
+#+end_src
+
+*** Consult
+
+#+begin_src emacs-lisp
+      (use-package consult
+	:straight t
+	:custom
+	(recentf-mode 1)
+	:bind
+	("C-x b" . consult-buffer)
+	("M-y" . consult-yank-from-kill-ring))
+
+#+end_src
+
+*** Embark
+
+#+begin_src emacs-lisp
+  (use-package embark
+    :straight t
+
+    :bind
+    (("C-," . embark-act)         ;; pick some comfortable binding
+     ("M-," . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+		 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+		   nil
+		   (window-parameters (mode-line-format . none)))))
+
+  (use-package embark-consult
+    :straight t
+    :after (embark consult)
+    :demand t
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
 
 ** Which key (cool popup for available commands)
 
    #+BEGIN_SRC emacs-lisp
-   (use-package which-key
-    :init (which-key-mode)
-    :diminish which-key-mode
-    :config
-    (setq which-key-idle-delay 0.3))
+     (use-package which-key
+       :straight t
+       :init (which-key-mode)
+       :diminish which-key-mode
+       :config
+      (setq which-key-idle-delay 0.3))
    #+END_SRC
 
 ** Helpful package
 
   #+begin_src emacs-lisp
     (use-package helpful
-      :custom
-      (counsel-describe-function-function #'helpful-callable)
-      (counsel-describe-variable-function #'helpful-variable)
+      :straight t
       :bind
-      ([remap describe-function] . counsel-describe-function)
+      ([remap describe-function] . helpful-callable)
       ([remap describe-command] . helpful-command)
-      ([remap describe-variable] . counsel-describe-variable)
+      ([remap describe-variable] . helpful-variable)
       ([remap describe-key] . helpful-key))
-  #+end_src 
+  #+end_src
 
 ** Vterm
 
 #+begin_src emacs-lisp
- (use-package vterm) 
+   (use-package vterm
+     :straight t)
 #+end_src
 
 * UI
@@ -116,15 +164,15 @@
 ** Transparency
 
 #+begin_src emacs-lisp
- (set-frame-parameter (selected-frame) 'alpha '(95 . 80))
- (add-to-list 'default-frame-alist '(alpha . (95 . 80)))
+ (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+ (add-to-list 'default-frame-alist '(alpha . (95 . 95)))
 #+end_src
 
 ** Set Theme
-   
+
   #+BEGIN_SRC emacs-lisp
       (use-package doom-themes
-	:ensure t
+	:straight t
 	:config
 	;; Global settings (defaults)
 	;(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -138,15 +186,16 @@
 	;; Corrects (and improves) org-mode's native fontification.
 	(doom-themes-org-config))
    #+END_SRC
-  
+
 ** Font
-   
+
   #+BEGIN_SRC emacs-lisp
     (use-package treemacs-evil
-      :after (treemacs evil)
-      :ensure t) ;; set font to FiraCode
+      :straight t
+      :after (treemacs evil))
+
+    ;; set font to FiraCode
     (add-to-list 'default-frame-alist '(font . "Fira Code-13"))
-    ;;(set-frame-font "Fira Code-13" nil t)
 
     ;; font ligature
     (use-package ligature
@@ -159,23 +208,23 @@
       (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
       ;; Enable all Cascadia Code ligatures in programming modes
       (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-					   ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-					   "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-					   "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-					   "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-					   "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-					   "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-					   "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-					   ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-					   "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-					   "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-					   "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-					   "\\\\" "://"))
+                                           ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                           "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                           "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                           "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                           "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                           "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                           "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                           ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                           "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                           "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                           "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                           "\\\\" "://"))
       ;; Enables ligature checks globally in all buffers. You can also do it
       ;; per mode with `ligature-mode'.
       (global-ligature-mode t))
   #+END_SRC
-  
+
 ** Indentation management
    set tab width to 4 spaces and force cc-mode and perl-mode use tab width
    #+BEGIN_SRC emacs-lisp
@@ -188,6 +237,7 @@
 
    #+begin_src emacs-lisp
      (use-package smart-tabs-mode
+       :straight t
        :config
        (smart-tabs-insinuate 'c 'javascript 'python))
 
@@ -196,31 +246,55 @@
 ** Mode line
    #+BEGIN_SRC emacs-lisp
      (use-package doom-modeline
-       :ensure t
+       :straight t
        :init (doom-modeline-mode 1)
        :custom ((doom-modeline-height 13)))
      (use-package all-the-icons
+       :straight t
        :if (display-graphic-p))
    #+END_SRC
-   
-** Smart Parenthesis
+
+** splash screen
+
+#+begin_src emacs-lisp
+#+end_src
+
 * Org Mode
-** Install Org bullets
-   
+** Org bullets
+
   #+BEGIN_SRC emacs-lisp
     ;; org bullet
      (use-package org-bullets
+       :straight t
        :hook (org-mode . org-bullets-mode)
        :custom
        (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-     (setq org-ellipsis " ▾")
   #+END_SRC
-  
+** Configure org
+
+#+begin_src emacs-lisp
+  (defun nate/org-mode-setup ()
+    (org-indent-mode)
+    ;;	(variable-pitch-mode 1)
+    (auto-fill-mode 0)
+    (setq evil-auto-indent nil))
+
+  (use-package org
+    :straight nil
+    :hook (org-mode . nate/org-mode-setup)
+    :config
+    (setq org-ellipsis " ▾"
+          org-hide-emphasis-markers t))
+
+
+#+end_src
+
 * Programming Helpers
-** yasnippet 
+** yasnippet
 
 #+begin_src emacs-lisp
   (use-package yasnippet
+    :straight t
     :config
     (yas-load-directory "/usr/share/emacs/site-lisp/yasnippet-snippets/snippets")
     (yas-global-mode 1))
@@ -231,7 +305,7 @@
 
 #+begin_src emacs-lisp
   (use-package projectile
-    :bind (("C-c p" . projectile-command-map))
+    :straight t
     :config
     (projectile-mode +1))
 #+end_src
@@ -239,34 +313,36 @@
 * Evil Mode
 
     #+begin_src emacs-lisp
-    (use-package evil
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-i-jump nil)
-    :config
-    (evil-mode 1)
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+      (use-package evil
+      :init
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-want-C-u-scroll t)
+      (setq evil-want-C-i-jump nil)
+      :config
+      (evil-mode 1)
+      (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+      (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
-    ;; Use visual line motions even outside of visual-line-mode buffers
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+      ;; Use visual line motions even outside of visual-line-mode buffers
+      (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+      (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
-    (evil-set-initial-state 'messages-buffer-mode 'normal)
-    (evil-set-initial-state 'dashboard-mode 'normal))
+      (evil-set-initial-state 'messages-buffer-mode 'normal)
+      (evil-set-initial-state 'dashboard-mode 'normal))
 
-    (use-package evil-collection
-    :after evil
-    :config
-    (evil-collection-init))
+      (use-package evil-collection
+	:straight t
+	:after evil
+	:config
+	(evil-collection-init))
     #+end_src
+
 * Treemacs
 
 #+begin_src emacs-lisp
     (use-package treemacs
-    :ensure t
+    :straight t
     :defer t
     :init
     (with-eval-after-load 'winum
@@ -349,81 +425,75 @@
 	  ("C-x t C-t" . treemacs-find-file)
 	  ("C-x t M-t" . treemacs-find-tag)))
 
-  (use-package treemacs-evil
-    :after (treemacs evil)
-    :ensure t)
-
   (use-package treemacs-projectile
     :after (treemacs projectile)
-    :ensure t)
+    :straight t)
 
   (use-package treemacs-icons-dired
     :hook (dired-mode . treemacs-icons-dired-enable-once)
-    :ensure t)
+    :straight t)
 
   ;; (use-package treemacs-magit
   ;;   :after (treemacs magit)
   ;;   :ensure t)
 #+end_src
+
 * Programming modes
 ** Python
-
-set python shell interpreter to python this is version 3
-#+begin_src emacs-lisp
-  (use-package python-mode
-    :ensure nil
-    :custom
-    (python-shell-interpreter "python"))
-#+end_src
-
 ** Lsp-mode
 
 language server support
 #+begin_src emacs-lisp
   (use-package lsp-mode
+    :straight t
     :init
     (setq lsp-keymap-prefix "C-c l")
     :hook (python-mode . lsp)
     (lsp-mode . lsp-enable-which-key-integration))
 
-  (use-package lsp-ivy
-    :commands lsp-ivy-workspace-symbol)
-  (use-package lsp-treemacs)
+  (use-package lsp-treemacs
+    :straight t)
+
 #+end_src
 
 ** Better syntax highlighting
 #+begin_src emacs-lisp
-  (use-package tree-sitter)
-  (use-package tree-sitter-langs)
+      (use-package tree-sitter
+	:straight t)
+      (use-package tree-sitter-langs
+	:straight t)
 
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+      (global-tree-sitter-mode)
+      (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
 
 ** Company frontend
 #+begin_src emacs-lisp
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
+    (use-package company-box
+      :straight t
+      :hook (company-mode . company-box-mode))
 #+end_src
 
-** flycheck 
+** flycheck
 #+begin_src emacs-lisp
   (use-package flycheck
-    :ensure t
+    :straight t
     :init (global-flycheck-mode))
 #+end_src
 
 * Docker
 
 #+begin_src emacs-lisp
-  (use-package dockerfile-mode)
+  (use-package dockerfile-mode
+    :straight t)
 #+end_src
 
 * Latex
 ** language server support
 
 #+begin_src emacs-lisp
- (use-package lsp-latex)
+ (use-package lsp-latex
+    :straight t)
 #+end_src
 ** AUCTEX
 
@@ -448,8 +518,57 @@ language server support
 ** cdlatex
 
 #+begin_src emacs-lisp
-  (use-package cdlatex)
-  (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
+    (use-package cdlatex
+    :straight t )
+    (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
 #+end_src
 
+* Keybindings
 
+hell nathan nathan
+#+begin_src emacs-lisp
+    (use-package general
+      :straight t
+      :config
+      (general-create-definer nate/leader-keys
+	:keymaps '(normal insert visual emacs)
+	:prefix "SPC"
+	:global-prefix "M-SPC")
+
+      ;; test with theme
+      (nate/leader-keys
+      "t"  '(:ignore t :which-key "toggles")
+      "tt" '(consult-theme :which-key "choose theme"))
+
+      ;; Buffer
+      (nate/leader-keys
+      "b"  '(:ignore t :which-key "Buffers")
+      "bs"  '(consult-buffer :which-key "switch consult-buffer")
+      "bk"  '(kill-buffer :which-key "kill-buffer"))
+
+      ;; Window
+
+      (nate/leader-keys
+      "w" '(:ignore t :which-key "window")
+      "ws" '(split-window-vertically :which-key "split horizontally")
+      "wv" '(split-window-horizontally :which-key "split vertically")
+      "wn" '(ace-window :which-key "move to the next window")
+      "wq" '(evil-quit :which-key "quit window")
+      "wk" '(evil-window-up :which-key "move to the window up")
+      "wj" '(evil-window-down :which-key "move to the window down")
+      "wh" '(evil-window-left :which-key "move to the window left")
+      "wl" '(evil-window-right :which-key "move to the window right"))
+
+
+      (nate/leader-keys
+      "o" '(:ignore t :which-key "Launchers")
+      "ov" '(vterm-other-window :which-key "open vterm-other-window")
+      "od" '(dired :which-key "open dired")
+      "oe" '(eww :which-key "open eww"))
+
+      ;; File operations
+      (nate/leader-keys
+	"f" '(:ignore t :which-key "file operations")
+	"fo" '(find-file :which-key "find-file")
+	"fr" '(consult-recent-file :which-key "consult-recent-file")))
+#+end_src
