@@ -180,9 +180,21 @@
 ** Disable unecessary defaults
 
   #+BEGIN_SRC emacs-lisp
+    ;; Define a read-only directory class
 
-    ;; disable the start-up screen greeter
-    (setq inhibit-startup-message t)
+    (dir-locals-set-class-variables 'read-only
+                                    '((nil . ((buffer-read-only . t)))))
+    ;; Associate directories with the read-only class
+    (dolist (dir (list  "~/.emacs.d/readonly/"))
+      (dir-locals-set-directory-class (file-truename dir) 'read-only))
+
+    ;; Remove text
+    (setq inhibit-startup-screen 1)
+    ;; (setq fancy-startup-text nil)
+    ;; (setq fancy-about-text nil)
+    (let ((filename "~/.emacs.d/readonly/startup.org"))
+      (when (file-exists-p filename)
+        (setq initial-buffer-choice filename)))
 
     ;; disable unneccessary modes
     (menu-bar-mode -1)
@@ -196,12 +208,13 @@
                     eshell-mode-hook
                     org-mode-hook
                     ranger-mode-hook
+                    org-agenda-mode-hook
                     image-mode-hook
                     dired-mode-hook
                     markdown-mode-hook
+
                     pdf-view-mode-hook))
       (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
   #+END_SRC
 
 ** Transparency
@@ -331,18 +344,19 @@
 ** Configure org
 
 #+begin_src emacs-lisp
-    (defun nate/org-mode-setup ()
-           (org-indent-mode)
-           (visual-line-mode 1))
+  (defun nate/org-mode-setup ()
+         (org-indent-mode)
+         (visual-line-mode 1))
 
-    (use-package org
-      :straight nil
-      :hook (org-mode . nate/org-mode-setup)
-      :custom
-      (org-ellipsis " ▾"
-            org-hide-emphasis-markers t))
-
-
+  (use-package org
+    :straight nil
+    :hook (org-mode . nate/org-mode-setup)
+    :custom
+    (org-ellipsis " ▾")
+    (org-log-into-drawer t)
+    (org-startup-with-inline-images 1)
+    (org-deadline-warning-days 7)
+    (org-hide-emphasis-markers 1))
 #+end_src
 
 ** Visual fill column
@@ -364,10 +378,29 @@
 #+begin_src emacs-lisp
   (use-package org
     :straight nil
+    :config
+    ;; Save Org buffers after refiling!
+    (advice-add 'org-refile :after 'org-save-all-org-buffers)
     :custom
     (org-agenda-files '("~/Documents/Org/Research.org"
                         "~/Documents/Org/Thesis_Document.org"
-                        "~/Documents/Org/System_Configuration.org")))
+                        "~/Documents/Org/System_Configuration.org"))
+    (org-refile-targets '((org-agenda-files :maxlevel . 1)
+                          ("~/Documents/Org/Archive.org" :maxlevel . 1)))
+    (org-todo-keywords '((sequence "TODO(t)"
+                                   "INTR(i)"
+                                   "NEXT(n)"
+                                   "PROG(p)"
+                                   "WAITING(w)"
+                                   "|"
+                                   "DONE(d)"
+                                   "CANCELED(c)")))
+    (org-agenda-custom-commands '(("n" "Agenda for | INTR | PROG | NEXT"
+                                   ((agenda "" nil)
+                                    (todo "INTR" nil)
+                                    (todo "PROG" nil)
+                                    (todo "NEXT" nil)
+                                    nil)))))
 #+end_src
 
 * Programming Helpers
@@ -636,6 +669,7 @@ language server support
 #+end_src
 
 * Keybindings
+*** general setup: Here we setup general mode for keybindings
 
 #+begin_src emacs-lisp
   (use-package general
@@ -645,57 +679,95 @@ language server support
       :keymaps '(normal insert visual emacs)
       :prefix "SPC"
       :global-prefix "M-SPC")
+#+end_src
 
-    ;; test with theme
-    (nate/leader-keys
-      "t"  '(:ignore t :which-key "toggles")
-      "tt" '(consult-theme :which-key "choose theme"))
+*** Keybindings for toggles
 
-    ;; Embark
-    (nate/leader-keys
-      "e"  '(:ignore t :which-key "Embark")
-      "ea"  '(embark-act :which-key "embark Act")
-      "ed"  '(embark-dwim :which-key "embark Dwim"))
+#+begin_src emacs-lisp
+  ;; test with theme
+  (nate/leader-keys
+    "t"  '(:ignore t :which-key "toggles")
+    "tt" '(consult-theme :which-key "choose theme"))
+#+end_src
 
+*** Keybindings for Embark
+
+#+begin_src emacs-lisp
+  ;; Embark
+  (nate/leader-keys
+    "e"  '(:ignore t :which-key "Embark")
+    "ea"  '(embark-act :which-key "embark Act")
+    "ed"  '(embark-dwim :which-key "embark Dwim"))
+#+end_src
+
+*** Keybindings for Zoom
+
+#+begin_src emacs-lisp
     ;; Hydra zoom
     (nate/leader-keys
       "z"  '(hydra-zoom/body :which-key "zoom"))
+#+end_src
 
-    ;; org-agenda
-    (nate/leader-keys
-      "o"  '(:ignore :which-key "org")
-      "oa"  '(org-agenda :which-key "org"))
+*** Keybindings for Org agenda
 
-    ;; Buffer
-    (nate/leader-keys
-      "b"  '(:ignore t :which-key "Buffers")
-      "bs"  '(consult-buffer :which-key "switch consult-buffer")
-      "bk"  '(kill-buffer :which-key "kill-buffer"))
+#+begin_src emacs-lisp
+  ;; org-agenda
+  (nate/leader-keys
+    "o"  '(:ignore :which-key "org")
+    "oa"  '(org-agenda :which-key "org"))
+#+end_src
 
-    ;; window management
-    (nate/leader-keys
-      "w" '(:ignore t :which-key "window")
-      "ws" '(split-window-vertically :which-key "split horizontally")
-      "wv" '(split-window-horizontally :which-key "split vertically")
-      "wn" '(ace-window :which-key "move to the next window")
-      "wq" '(evil-quit :which-key "quit window")
-      "wk" '(evil-window-up :which-key "move to the window up")
-      "wj" '(evil-window-down :which-key "move to the window down")
-      "wh" '(evil-window-left :which-key "move to the window left")
-      "wc" '(hydra-window/body :which-key "change window size")
-      "wl" '(evil-window-right :which-key "move to the window right"))
+*** Keybindings for Buffers
 
+#+begin_src emacs-lisp
+  ;; Buffer
+  (nate/leader-keys
+    "b"  '(:ignore t :which-key "Buffers")
+    "bs"  '(consult-buffer :which-key "switch consult-buffer")
+    "bd"  '(kill-buffer :which-key "kill-buffer"))
+#+end_src
+
+*** Keybindings for Window management
+
+#+begin_src emacs-lisp
+  ;; window management
+  (nate/leader-keys
+    "w" '(:ignore t :which-key "window")
+    "ws" '(split-window-vertically :which-key "split horizontally")
+    "wv" '(split-window-horizontally :which-key "split vertically")
+    "wn" '(ace-window :which-key "move to the next window")
+    "wd" '(evil-quit :which-key "quit window")
+    "wk" '(evil-window-up :which-key "move to the window up")
+    "wj" '(evil-window-down :which-key "move to the window down")
+    "wh" '(evil-window-left :which-key "move to the window left")
+    "wc" '(hydra-window/body :which-key "change window size")
+    "wl" '(evil-window-right :which-key "move to the window right"))
+#+end_src
+
+*** Keybindings for Projectile
+
+#+begin_src emacs-lisp
     ;; Projectile
     (nate/leader-keys
       "p" '(projectile-command-map :which-key "Projectile")      
       "pb" '(consult-projectile :which-key "consult projectile switch to buffer"))
+#+end_src
 
+*** Keybindings for Magit
+
+#+begin_src emacs-lisp
     ;; Magit
     (nate/leader-keys
       "m" '(:ignore :which-key "Magit")      
       "ma" '(magit-stage :which-key "Magit stage")      
+      "ml" '(magit-log :which-key "Magit log")      
+      "md" '(magit-diff :which-key "Magit diff")      
       "ms" '(magit-status :which-key "Magit status"))
+#+end_src
 
+*** Keybindings for Program Launchers
+
+#+begin_src emacs-lisp
     ;; Program Launchers
     (nate/leader-keys
       "r" '(:ignore t :which-key "Launchers")
@@ -703,7 +775,11 @@ language server support
       "rd" '(dired :which-key "open dired")
       "rr" '(ranger :which-key "open ranger")
       "re" '(eww :which-key "open eww"))
+#+end_src
 
+*** Keybindings for File Operations
+
+#+begin_src emacs-lisp
     ;; File operations
     (nate/leader-keys
       "f" '(:ignore t :which-key "file operations")
