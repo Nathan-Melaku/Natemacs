@@ -1,7 +1,13 @@
+#+title: Emacs Configuration script
+#+email: cy6ass@gmail.com
+#+author: Nathan Melaku
+
 * General Helpers
 ** Straight.el package manager
+The first thing to do is configure straight.el to manage my packages. In this regard ensure is always true and straight works side by side with package.el, in order to make compatibility with cetain org mode packages.
 
   #+BEGIN_SRC emacs-lisp
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     ;; install straight.el
     (defvar bootstrap-version)
     (let ((bootstrap-file
@@ -24,6 +30,7 @@
   #+END_SRC
 
 ** Vertico
+Vertico is a light weight completion engine. The first section performs general initialisation for this package.
 *** general init
 
   #+begin_src emacs-lisp
@@ -74,13 +81,14 @@
 *** Consult
 
 #+begin_src emacs-lisp
-  (use-package consult
-    :straight t
-    :custom
-    (recentf-mode 1)
-    :bind
-    ("C-x b" . consult-buffer)
-    ("M-y" . consult-yank-from-kill-ring))
+    (use-package consult
+      :straight t
+      :custom
+      (recentf-mode 1)
+      :bind
+      ("C-x b" . consult-buffer)
+      ("M-y" . consult-yank-from-kill-ring)
+      ("C-s" . consult-line-multi))
 
 #+end_src
 
@@ -106,6 +114,17 @@
     :demand t
     :hook
     (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
+
+*** All the icons completion
+
+#+begin_src emacs-lisp
+  (use-package all-the-icons-completion
+  :straight t
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
 #+end_src
 
 ** Which key (cool popup for available commands)
@@ -140,12 +159,12 @@
 
 ** Ranger
 
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
         (use-package ranger
           :straight t
           :custom
           (ranger-show-literal nil)
-          (ranger-modify-header nil)) 
+          (ranger-modify-header nil))
 #+end_src
 
 ** Pdf tools
@@ -176,27 +195,66 @@
     ("k" evil-window-increase-height "up"))
 #+end_src
 
+** Perspective
+
+#+begin_src emacs-lisp
+  (use-package perspective
+    :straight t
+    :bind (("C-x b" . persp-switch-to-buffer*)
+           ("C-x k" . persp-kill-buffer*))
+    :custom
+    (persp-state-default-file "~/.emacs.d/auto-save-list/perspectives")
+    ;; :hook (persp-mode . (persp-state-load persp-state-default-file))
+    :config
+    (add-hook 'kill-emacs-hook #'persp-state-save)
+    ;; Running `persp-mode' multiple times resets the perspective list...
+    (unless (equal persp-mode t)
+      (persp-mode)))
+
+  (use-package treemacs-perspective
+    :straight t
+    :after (treemacs perspective)
+    :config (treemacs-set-scope-type 'Perspectives))
+
+  (use-package persp-projectile
+    :straight t)
+
+#+end_src
+
+** Shell pop
+
+#+begin_src emacs-lisp
+  (use-package shell-pop
+    :straight t
+    :config
+    (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+    (setq shell-pop-term-shell "/bin/zsh")
+    ;; need to do this manually or not picked up by `shell-pop'
+    (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+#+end_src
+
 * UI
 ** Disable unecessary defaults
 
   #+BEGIN_SRC emacs-lisp
     ;; Define a read-only directory class
 
-    (dir-locals-set-class-variables 'read-only
-                                    '((nil . ((buffer-read-only . t)))))
-    ;; Associate directories with the read-only class
-    (dolist (dir (list  "~/.emacs.d/readonly/"))
-      (dir-locals-set-directory-class (file-truename dir) 'read-only))
+    ;; (dir-locals-set-class-variables 'read-only
+    ;;                                 '((nil . ((buffer-read-only . t)))))
+    ;; ;; Associate directories with the read-only class
+    ;; (dolist (dir (list  "~/.emacs.d/readonly/"))
+    ;;   (dir-locals-set-directory-class (file-truename dir) 'read-only))
 
-    ;; Remove text
-    (setq inhibit-startup-screen 1)
-    ;; (setq fancy-startup-text nil)
-    ;; (setq fancy-about-text nil)
-    (let ((filename "~/.emacs.d/readonly/startup.org"))
-      (when (file-exists-p filename)
-        (setq initial-buffer-choice filename)))
+    ;; ;; Remove text
+    ;; (setq inhibit-startup-screen 1)
+    ;; ;; (setq fancy-startup-text nil)
+    ;; ;; (setq fancy-about-text nil)
+    ;; (let ((filename "~/.emacs.d/readonly/startup.org"))
+    ;;   (when (file-exists-p filename)
+    ;;     (setq initial-buffer-choice filename)))
 
     ;; disable unneccessary modes
+    (setq native-comp-async-report-warnings-errors nil)
     (menu-bar-mode -1)
     (tool-bar-mode -1)
     (scroll-bar-mode -1)
@@ -220,27 +278,37 @@
 ** Transparency
 
 #+begin_src emacs-lisp
- (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
- (add-to-list 'default-frame-alist '(alpha . (95 . 95)))
+ (set-frame-parameter (selected-frame) 'alpha '(100 . 95))
+ (add-to-list 'default-frame-alist '(alpha . (100 . 95)))
 #+end_src
 
 ** Set Theme
 
   #+BEGIN_SRC emacs-lisp
-      (use-package doom-themes
-	:straight t
-	:config
-	;; Global settings (defaults)
-	;(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	    ;  doom-themes-enable-italic t) ; if nil, italics is universally disabled
-	(load-theme 'doom-dracula t)
+    (use-package doom-themes
+      :straight t
+      :config
+      (load-theme 'doom-snazzy t)
 
-	;; Enable flashing mode-line on errors
-	(doom-themes-visual-bell-config)
-	;; Enable custom neotree theme (all-the-icons must be installed!)
-	(doom-themes-neotree-config)
-	;; Corrects (and improves) org-mode's native fontification.
-	(doom-themes-org-config))
+      ;; Enable flashing mode-line on errors
+      (doom-themes-visual-bell-config)
+      ;; Enable custom neotree theme (all-the-icons must be installed!)
+      (doom-themes-neotree-config)
+      ;; Corrects (and improves) org-mode's native fontification.
+      (doom-themes-org-config))
+
+    ;; remove background color on terminal emacs
+    (defun on-frame-open (frame)
+      (if (not (display-graphic-p frame))
+          (set-face-background 'default "unspecified-bg" frame)))
+    (on-frame-open (selected-frame))
+
+    (defun on-after-init ()
+      (unless (display-graphic-p (selected-frame))
+        (set-face-background 'default "unspecified-bg" (selected-frame))))
+
+    (add-hook 'after-make-frame-functions 'on-frame-open)
+    (add-hook 'window-setup-hook 'on-after-init)
    #+END_SRC
 
 ** Font
@@ -251,9 +319,10 @@
       :after (treemacs evil))
 
     ;; set font to FiraCode
-    (add-to-list 'default-frame-alist '(font . "Fira Code-13"))
+    (add-to-list 'default-frame-alist '(font . "Firacode-13"))
+    ;; (add-to-list 'default-frame-alist '(font . "JoyPixels-13"))
 
-    ;; font ligature
+    ;; font ligature				
     (use-package ligature
       :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
       :config
@@ -315,7 +384,7 @@
 #+begin_src emacs-lisp
      (use-package all-the-icons-dired
        :straight (all-the-icons-dired :type git :host github :repo "jtbm37/all-the-icons-dired")
-       :hook (dired-mode . all-the-icons-dired-mode)) 
+       :hook (dired-mode . all-the-icons-dired-mode))
 #+end_src
 
 ** Rc file syntax
@@ -327,6 +396,28 @@
 ** splash screen
 
 #+begin_src emacs-lisp
+    (use-package page-break-lines
+      :straight t
+      :config
+      (global-page-break-lines-mode))
+
+    (use-package dashboard
+      :straight t
+      :config
+      (page-break-lines-mode)
+      (dashboard-setup-startup-hook)
+      :custom
+      (dashboard-projects-switch-function 'projectile-persp-switch-project)
+      (dashboard-items '((recents  . 3)
+                          (bookmarks . 3)
+                          (projects . 3)
+                          (agenda . 3)
+                          (registers . 3)))
+      (dashboard-set-heading-icons t)
+      (dashboard-set-file-icons t)
+      (dashboard-center-content t)
+      (dashboard-banner-logo-title "Welcome to NateEmacs")
+      (initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
 #+end_src
 
 * Org Mode
@@ -354,9 +445,8 @@
     :custom
     (org-ellipsis " ▾")
     (org-log-into-drawer t)
-    (org-startup-with-inline-images 1)
     (org-deadline-warning-days 7)
-    (org-hide-emphasis-markers 1))
+    (org-hide-emphasis-markers nil))
 #+end_src
 
 ** Visual fill column
@@ -370,7 +460,7 @@
   (use-package visual-fill-column
     :straight t
     :hook (org-mode . efs/org-mode-visual-fill))
- 
+
 #+end_src
 
 ** Org-agenda
@@ -401,6 +491,22 @@
                                     (todo "PROG" nil)
                                     (todo "NEXT" nil)
                                     nil)))))
+#+end_src
+
+** Org tree slide
+
+#+begin_src emacs-lisp
+   (use-package org-tree-slide
+     :straight t)
+#+end_src
+
+** Org-reveal
+
+#+begin_src emacs-lisp
+  (use-package ox-reveal
+    :ensure t
+    :custom
+    (org-reveal-root "file:///home/nathan/Documents/Tools/reveal.js"))
 #+end_src
 
 * Programming Helpers
@@ -443,6 +549,7 @@
     :config
     (projectile-mode +1)
     :custom
+    (projectile-switch-project-action #'projectile-dired)
     (projectile-project-search-path '("~/Documents/Projects/" "~/Documents/Thesis/")))
 #+end_src
 
@@ -456,6 +563,21 @@
 #+begin_src emacs-lisp
     (use-package magit
       :straight t)
+#+end_src
+
+** Evil nerd commenter
+
+#+begin_src emacs-lisp
+      (use-package evil-nerd-commenter
+        :straight t)
+#+end_src
+
+** Rainbow delimiters 
+
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :straight t
+    :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
 * Evil Mode
@@ -489,101 +611,109 @@
 * Treemacs
 
 #+begin_src emacs-lisp
-    (use-package treemacs
-    :straight t
-    :defer t
-    :init
-    (with-eval-after-load 'winum
-      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-    :config
-    (progn
-      (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-            treemacs-deferred-git-apply-delay        0.5
-            treemacs-directory-name-transformer      #'identity
-            treemacs-display-in-side-window          t
-            treemacs-eldoc-display                   'simple
-            treemacs-file-event-delay                5000
-            treemacs-file-extension-regex            treemacs-last-period-regex-value
-            treemacs-file-follow-delay               0.2
-            treemacs-file-name-transformer           #'identity
-            treemacs-follow-after-init               t
-            treemacs-expand-after-init               t
-            treemacs-find-workspace-method           'find-for-file-or-pick-first
-            treemacs-git-command-pipe                ""
-            treemacs-goto-tag-strategy               'refetch-index
-            treemacs-indentation                     2
-            treemacs-indentation-string              " "
-            treemacs-is-never-other-window           nil
-            treemacs-max-git-entries                 5000
-            treemacs-missing-project-action          'ask
-            treemacs-move-forward-on-expand          nil
-            treemacs-no-png-images                   nil
-            treemacs-no-delete-other-windows         t
-            treemacs-project-follow-cleanup          nil
-            treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-            treemacs-position                        'left
-            treemacs-read-string-input               'from-child-frame
-            treemacs-recenter-distance               0.1
-            treemacs-recenter-after-file-follow      nil
-            treemacs-recenter-after-tag-follow       nil
-            treemacs-recenter-after-project-jump     'always
-            treemacs-recenter-after-project-expand   'on-distance
-            treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-            treemacs-show-cursor                     nil
-            treemacs-show-hidden-files               t
-            treemacs-silent-filewatch                nil
-            treemacs-silent-refresh                  nil
-            treemacs-sorting                         'alphabetic-asc
-            treemacs-select-when-already-in-treemacs 'move-back
-            treemacs-space-between-root-nodes        t
-            treemacs-tag-follow-cleanup              t
-            treemacs-tag-follow-delay                1.5
-            treemacs-text-scale                      nil
-            treemacs-user-mode-line-format           nil
-            treemacs-user-header-line-format         nil
-            treemacs-wide-toggle-width               70
-            treemacs-width                           35
-            treemacs-width-increment                 1
-            treemacs-width-is-initially-locked       t
-            treemacs-workspace-switch-cleanup        nil)
+      (use-package treemacs
+      :straight t
+      :defer t
+      :init
+      (with-eval-after-load 'winum
+        (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+      :config
+      (progn
+        (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+              treemacs-deferred-git-apply-delay        0.5
+              treemacs-directory-name-transformer      #'identity
+              treemacs-display-in-side-window          t
+              treemacs-eldoc-display                   'simple
+              treemacs-file-event-delay                5000
+              treemacs-file-extension-regex            treemacs-last-period-regex-value
+              treemacs-file-follow-delay               0.2
+              treemacs-file-name-transformer           #'identity
+              treemacs-follow-after-init               t
+              treemacs-expand-after-init               t
+              treemacs-find-workspace-method           'find-for-file-or-pick-first
+              treemacs-git-command-pipe                ""
+              treemacs-goto-tag-strategy               'refetch-index
+              treemacs-indentation                     2
+              treemacs-indentation-string              " "
+              treemacs-is-never-other-window           nil
+              treemacs-max-git-entries                 5000
+              treemacs-missing-project-action          'ask
+              treemacs-move-forward-on-expand          nil
+              treemacs-no-png-images                   nil
+              treemacs-no-delete-other-windows         t
+              treemacs-project-follow-cleanup          nil
+              treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+              treemacs-position                        'left
+              treemacs-read-string-input               'from-child-frame
+              treemacs-recenter-distance               0.1
+              treemacs-recenter-after-file-follow      nil
+              treemacs-recenter-after-tag-follow       nil
+              treemacs-recenter-after-project-jump     'always
+              treemacs-recenter-after-project-expand   'on-distance
+              treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+              treemacs-show-cursor                     nil
+              treemacs-show-hidden-files               t
+              treemacs-silent-filewatch                nil
+              treemacs-silent-refresh                  nil
+              treemacs-sorting                         'alphabetic-asc
+              treemacs-select-when-already-in-treemacs 'move-back
+              treemacs-space-between-root-nodes        t
+              treemacs-tag-follow-cleanup              t
+              treemacs-tag-follow-delay                1.5
+              treemacs-text-scale                      nil
+              treemacs-user-mode-line-format           nil
+              treemacs-user-header-line-format         nil
+              treemacs-wide-toggle-width               70
+              treemacs-width                           35
+              treemacs-width-increment                 1
+              treemacs-width-is-initially-locked       t
+              treemacs-workspace-switch-cleanup        nil)
 
-      ;; The default width and height of the icons is 22 pixels. If you are
-      ;; using a Hi-DPI display, uncomment this to double the icon size.
-      ;;(treemacs-resize-icons 44)
+        ;; The default width and height of the icons is 22 pixels. If you are
+        ;; using a Hi-DPI display, uncomment this to double the icon size.
+        ;;(treemacs-resize-icons 44)
 
-      (treemacs-follow-mode t)
-      (treemacs-filewatch-mode t)
-      (treemacs-fringe-indicator-mode 'always)
+        (treemacs-follow-mode t)
+        (treemacs-filewatch-mode t)
+        (treemacs-fringe-indicator-mode 'always)
 
-      (pcase (cons (not (null (executable-find "git")))
-                   (not (null treemacs-python-executable)))
-        (`(t . t)
-         (treemacs-git-mode 'deferred))
-        (`(t . _)
-         (treemacs-git-mode 'simple)))
+        (pcase (cons (not (null (executable-find "git")))
+                     (not (null treemacs-python-executable)))
+          (`(t . t)
+           (treemacs-git-mode 'deferred))
+          (`(t . _)
+           (treemacs-git-mode 'simple)))
 
-      (treemacs-hide-gitignored-files-mode nil))
-    :bind
-    (:map global-map
-          ("M-0"       . treemacs-select-window)
-          ("C-x t 1"   . treemacs-delete-other-windows)
-          ("C-x t t"   . treemacs)
-          ("C-x t d"   . treemacs-select-directory)
-          ("C-x t B"   . treemacs-bookmark)
-          ("C-x t C-t" . treemacs-find-file)
-          ("C-x t M-t" . treemacs-find-tag)))
+        (treemacs-hide-gitignored-files-mode nil))
+      :bind
+      (:map global-map
+            ("M-0"       . treemacs-select-window)
+            ("C-x t 1"   . treemacs-delete-other-windows)
+            ("C-x t t"   . treemacs)
+            ("C-x t d"   . treemacs-select-directory)
+            ("C-x t B"   . treemacs-bookmark)
+            ("C-x t C-t" . treemacs-find-file)
+            ("C-x t M-t" . treemacs-find-tag)))
 
-  (use-package treemacs-projectile
-    :after (treemacs projectile)
-    :straight t)
+    (use-package treemacs-projectile
+      :after (treemacs projectile)
+      :straight t)
 
-  (use-package treemacs-magit
-    :after (treemacs magit)
-    :straight t)
+    (use-package treemacs-magit
+      :after (treemacs magit)
+      :straight t)
+    (use-package treemacs-all-the-icons
+      :straight t)
 #+end_src
 
 * Programming modes
 ** Python
+
+#+begin_src emacs-lisp
+  (use-package python-mode
+    :straight t)
+#+end_src
+
 ** Lsp-mode
 
 language server support
@@ -612,10 +742,18 @@ language server support
 #+end_src
 
 ** Company frontend
+
 #+begin_src emacs-lisp
-    (use-package company-box
-      :straight t
-      :hook (company-mode . company-box-mode))
+  (use-package company
+    :straight t
+    :config
+    (add-hook 'after-init-hook 'global-company-mode))
+
+  (use-package company-box
+    :straight t
+    :hook (company-mode . company-box-mode))
+    ;; :custom
+    ;; (company-box-icons-alist '(all-the-icons))
 #+end_src
 
 ** flycheck
@@ -623,6 +761,13 @@ language server support
   (use-package flycheck
     :straight t
     :init (global-flycheck-mode))
+#+end_src
+
+** htmlize
+
+#+begin_src emacs-lisp
+   (use-package htmlize
+     :straight t)
 #+end_src
 
 * Docker
@@ -660,6 +805,14 @@ language server support
   (setq reftex-plug-into-AUCTeX t)
 #+end_src
 
+** company-auctex
+#+begin_src emacs-lisp
+      (use-package company-auctex
+        :straight t
+        :hook
+        (LaTeX-mode company-auctex-init))
+#+end_src
+
 ** cdlatex
 
 #+begin_src emacs-lisp
@@ -687,7 +840,15 @@ language server support
   ;; test with theme
   (nate/leader-keys
     "t"  '(:ignore t :which-key "toggles")
+    "tp"  '(org-tree-slide-mode :which-key "toggle presentation") ;; only works in org mode
     "tt" '(consult-theme :which-key "choose theme"))
+#+end_src
+
+*** Keybindings for command
+
+#+begin_src emacs-lisp
+    (nate/leader-keys
+      "SPC" '(execute-extended-command :which-key "execute command"))
 #+end_src
 
 *** Keybindings for Embark
@@ -713,7 +874,8 @@ language server support
 #+begin_src emacs-lisp
   ;; org-agenda
   (nate/leader-keys
-    "o"  '(:ignore :which-key "org")
+    "o"  '(:ignore t :which-key "org")
+    "oh"  '(consult-org-heading :which-key "goto heading")
     "oa"  '(org-agenda :which-key "org"))
 #+end_src
 
@@ -749,7 +911,7 @@ language server support
 #+begin_src emacs-lisp
     ;; Projectile
     (nate/leader-keys
-      "p" '(projectile-command-map :which-key "Projectile")      
+      "p" '(projectile-command-map :which-key "Projectile")
       "pb" '(consult-projectile :which-key "consult projectile switch to buffer"))
 #+end_src
 
@@ -758,10 +920,10 @@ language server support
 #+begin_src emacs-lisp
     ;; Magit
     (nate/leader-keys
-      "m" '(:ignore :which-key "Magit")      
-      "ma" '(magit-stage :which-key "Magit stage")      
-      "ml" '(magit-log :which-key "Magit log")      
-      "md" '(magit-diff :which-key "Magit diff")      
+      "m" '(:ignore t :which-key "Magit")
+      "ma" '(magit-stage :which-key "Magit stage")
+      "ml" '(magit-log :which-key "Magit log")
+      "md" '(magit-diff :which-key "Magit diff")
       "ms" '(magit-status :which-key "Magit status"))
 #+end_src
 
@@ -770,11 +932,11 @@ language server support
 #+begin_src emacs-lisp
     ;; Program Launchers
     (nate/leader-keys
-      "r" '(:ignore t :which-key "Launchers")
-      "rv" '(vterm-other-window :which-key "open vterm-other-window")
-      "rd" '(dired :which-key "open dired")
-      "rr" '(ranger :which-key "open ranger")
-      "re" '(eww :which-key "open eww"))
+      "a" '(:ignore t :which-key "Launchers")
+      "av" '(shell-pop :which-key "shell-pop")
+      "ad" '(dired :which-key "open dired")
+      "ar" '(ranger :which-key "open ranger")
+      "ae" '(eww :which-key "open eww"))
 #+end_src
 
 *** Keybindings for File Operations
@@ -787,3 +949,27 @@ language server support
       "fs" '(save-buffer :which-key "save-file")
       "fr" '(consult-recent-file :which-key "consult-recent-file")))
 #+end_src
+
+*** Keybindings for Perspective
+
+#+begin_src emacs-lisp
+    (nate/leader-keys
+      "u" '(:keymap perspective-map :package perspective :which-key "perspective"))
+#+end_src
+
+*** Keybindings for comment
+
+#+begin_src emacs-lisp
+  (nate/leader-keys
+    "c" '(:ignore t :which-key "Comment")
+    "ci" '(evilnc-comment-or-uncomment-lines :which-key "comment/uncomment")
+    "cl" '(evilnc-quick-comment-or-uncomment-to-the-line :which-key "quick comment/uncomment")
+    "cc" '(evilnc-copy-and-comment-lines :which-key "copy and comment lines")
+    "cp" '(evilnc-comment-or-uncomment-paragraphs :which-key "comment/uncomment paragraphs")
+    "cr" '(comment-or-uncomment-region :which-key "comment/uncomment region")
+    "cv" '(evilnc-toggle-invert-comment-line-by-line :which-key "toggle invert comment"))
+#+end_src
+
+* Irc
+
+
