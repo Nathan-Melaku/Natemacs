@@ -1,12 +1,13 @@
 #+title: Emacs Configuration script
-#+email: cy6ass@gmail.com
+#+startup: fold
+#+email: nathanmelaku@protonmail.com
 #+author: Nathan Melaku
 
 * General Helpers
 ** Straight.el package manager
 The first thing to do is configure straight.el to manage my packages. In this regard ensure is always true and straight works side by side with package.el, in order to make compatibility with cetain org mode packages.
 
-  #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     ;; install straight.el
     (defvar bootstrap-version)
@@ -32,7 +33,7 @@ The first thing to do is configure straight.el to manage my packages. In this re
 ** Vertico
 Vertico is a light weight completion engine. The first section performs general initialisation for this package.
 *** general init
-
+k
   #+begin_src emacs-lisp
     (use-package vertico
       :straight t
@@ -157,14 +158,15 @@ Vertico is a light weight completion engine. The first section performs general 
      :straight t)
 #+end_src
 
-** Ranger
+** peep dired
 
 #+begin_src emacs-lisp
-        (use-package ranger
-          :straight t
-          :custom
-          (ranger-show-literal nil)
-          (ranger-modify-header nil))
+  ;;preview files in dired
+  (use-package peep-dired
+    :straight t
+    :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+    :bind (:map dired-mode-map
+                ("p" . peep-dired)))
 #+end_src
 
 ** Pdf tools
@@ -187,12 +189,12 @@ Vertico is a light weight completion engine. The first section performs general 
     ("k" text-scale-increase "in")
     ("j" text-scale-decrease "out"))
 
-  (defhydra hydra-window ()
-    "window size"
-    ("h" evil-window-decrease-width "left")
-    ("l" evil-window-increase-width "right")
-    ("j" evil-window-decrease-height "down")
-    ("k" evil-window-increase-height "up"))
+  ;; (defhydra hydra-window ()
+  ;;   "window size"
+  ;;   ("h" evil-window-decrease-width "left")
+  ;;   ("l" evil-window-increase-width "right")
+  ;;   ("j" evil-window-decrease-height "down")
+  ;;   ("k" evil-window-increase-height "up"))
 #+end_src
 
 ** Perspective
@@ -211,10 +213,10 @@ Vertico is a light weight completion engine. The first section performs general 
     (unless (equal persp-mode t)
       (persp-mode)))
 
-  (use-package treemacs-perspective
-    :straight t
-    :after (treemacs perspective)
-    :config (treemacs-set-scope-type 'Perspectives))
+  ;; (use-package treemacs-perspective
+  ;;   :straight t
+  ;;   :after (treemacs perspective)
+  ;;   :config (treemacs-set-scope-type 'Perspectives))
 
   (use-package persp-projectile
     :straight t)
@@ -233,26 +235,38 @@ Vertico is a light weight completion engine. The first section performs general 
     (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
 #+end_src
 
+** Dirvish
+
+#+begin_src emacs-lisp
+  (use-package dirvish
+    :straight t
+    :custom
+    (dirvish-bookmarks-alist
+     '(("h" "~/"                          "Home")
+       ("d" "~/Downloads/"                "Downloads")
+       ("m" "/mnt/"                       "Drives")
+       ("t" "~/.local/share/Trash/files/" "TrashCan"))))
+#+end_src
+
+** Ace window
+
+#+begin_src emacs-lisp
+    (use-package ace-window
+      :straight t)
+#+end_src
+
+* Registers
+
+#+begin_src emacs-lisp
+  (set-register ?k (cons 'file "~/Documents/Org/kerbit.org"))
+  (set-register ?c (cons 'file "~/.config/emacs/config.org"))
+  (set-register ?o (cons 'file "~/Documents/Org/organizer.org"))
+#+end_src
+
 * UI
 ** Disable unecessary defaults
 
   #+BEGIN_SRC emacs-lisp
-    ;; Define a read-only directory class
-
-    ;; (dir-locals-set-class-variables 'read-only
-    ;;                                 '((nil . ((buffer-read-only . t)))))
-    ;; ;; Associate directories with the read-only class
-    ;; (dolist (dir (list  "~/.emacs.d/readonly/"))
-    ;;   (dir-locals-set-directory-class (file-truename dir) 'read-only))
-
-    ;; ;; Remove text
-    ;; (setq inhibit-startup-screen 1)
-    ;; ;; (setq fancy-startup-text nil)
-    ;; ;; (setq fancy-about-text nil)
-    ;; (let ((filename "~/.emacs.d/readonly/startup.org"))
-    ;;   (when (file-exists-p filename)
-    ;;     (setq initial-buffer-choice filename)))
-
     ;; disable unneccessary modes
     (setq native-comp-async-report-warnings-errors nil)
     (menu-bar-mode -1)
@@ -260,7 +274,9 @@ Vertico is a light weight completion engine. The first section performs general 
     (scroll-bar-mode -1)
     ;; add line numbers
     (column-number-mode)
-    (global-display-line-numbers-mode 1)
+
+    (global-display-line-numbers-mode 'relative)
+    (setq display-line-numbers-type 'relative)
     (dolist (mode '(term-mode-hook
                     vterm-mode-hook
                     eshell-mode-hook
@@ -274,12 +290,12 @@ Vertico is a light weight completion engine. The first section performs general 
                     pdf-view-mode-hook))
       (add-hook mode (lambda () (display-line-numbers-mode 0))))
   #+END_SRC
-
+  
 ** Transparency
 
 #+begin_src emacs-lisp
- (set-frame-parameter (selected-frame) 'alpha '(100 . 95))
- (add-to-list 'default-frame-alist '(alpha . (100 . 95)))
+ (set-frame-parameter (selected-frame) 'alpha '(97 . 95))
+ (add-to-list 'default-frame-alist '(alpha . (97 . 95)))
 #+end_src
 
 ** Set Theme
@@ -314,13 +330,8 @@ Vertico is a light weight completion engine. The first section performs general 
 ** Font
 
   #+BEGIN_SRC emacs-lisp
-    (use-package treemacs-evil
-      :straight t
-      :after (treemacs evil))
-
     ;; set font to FiraCode
     (add-to-list 'default-frame-alist '(font . "Firacode-13"))
-    ;; (add-to-list 'default-frame-alist '(font . "JoyPixels-13"))
 
     ;; font ligature				
     (use-package ligature
@@ -358,25 +369,17 @@ Vertico is a light weight completion engine. The first section performs general 
      (defvaralias 'cperl-indent-level 'tab-width)
    #+END_SRC
 
-   install and configure smart-tabs
-
-   #+begin_src emacs-lisp
-     (use-package smart-tabs-mode
-       :straight t
-       :config
-       (smart-tabs-insinuate 'c 'javascript 'python))
-
-   #+end_src
-
 ** Mode line
+
    #+BEGIN_SRC emacs-lisp
      (use-package doom-modeline
        :straight t
        :init (doom-modeline-mode 1)
-       :custom ((doom-modeline-height 13)))
+       :custom ((doom-modeline-height 12)))
+     
      (use-package all-the-icons
-       :straight t
-       :if (display-graphic-p))
+              :straight t
+              :if (display-graphic-p))
    #+END_SRC
 
 ** Dired icons
@@ -396,28 +399,25 @@ Vertico is a light weight completion engine. The first section performs general 
 ** splash screen
 
 #+begin_src emacs-lisp
-    (use-package page-break-lines
-      :straight t
-      :config
-      (global-page-break-lines-mode))
+  (use-package page-break-lines
+    :straight t
+    :config
+    (global-page-break-lines-mode))
 
-    (use-package dashboard
-      :straight t
-      :config
-      (page-break-lines-mode)
-      (dashboard-setup-startup-hook)
-      :custom
-      (dashboard-projects-switch-function 'projectile-persp-switch-project)
-      (dashboard-items '((recents  . 3)
-                          (bookmarks . 3)
-                          (projects . 3)
-                          (agenda . 3)
-                          (registers . 3)))
-      (dashboard-set-heading-icons t)
-      (dashboard-set-file-icons t)
-      (dashboard-center-content t)
-      (dashboard-banner-logo-title "Welcome to NateEmacs")
-      (initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
+  (use-package dashboard
+    :straight t
+    :config
+    (page-break-lines-mode)
+    (dashboard-setup-startup-hook)
+    :custom
+    (dashboard-projects-switch-function 'projectile-persp-switch-project)
+    (dashboard-items '((agenda . 3)
+                       (registers . 3)))
+    (dashboard-set-heading-icons t)
+    (dashboard-set-file-icons t)
+    (dashboard-center-content t)
+    (dashboard-banner-logo-title "Welcome to NateEmacs")
+    (initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
 #+end_src
 
 * Org Mode
@@ -432,6 +432,50 @@ Vertico is a light weight completion engine. The first section performs general 
        (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
   #+END_SRC
 
+** Org-agenda
+
+#+begin_src emacs-lisp
+
+  ;; Save Org buffers after refiling!
+  (advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+  (setq org-agenda-files '("~/Documents/Org/kerbit.org"
+                           "~/Documents/Org/organizer.org"
+                           "~/Documents/Org/Thesis_Document.org"
+                           "~/Documents/Org/System_Configuration.org"))
+
+  (setq org-refile-targets '((org-agenda-files :maxlevel . 1)
+                        ("~/Documents/Org/Archive.org" :maxlevel . 1)))
+
+  (setq org-todo-keywords '((sequence "TODO(t)"
+                                 "INTR(i)"
+                                 "NEXT(n)"
+                                 "PROG(p)"
+                                 "WAITING(w)"
+                                 "|"
+                                 "DONE(d)"
+                                 "CANCELED(c)")))
+
+  (setq org-agenda-custom-commands '(("n" "Agenda for | INTR | PROG | NEXT"
+                                 ((agenda "" nil)
+                                  (todo "INTR" nil)
+                                  (todo "PROG" nil)
+                                  (todo "NEXT" nil)
+                                  nil))))
+#+end_src
+
+** Org-caputre
+
+#+begin_src emacs-lisp
+    (global-set-key (kbd "C-c c") #'org-capture)
+    (setq org-capture-templates
+          '(("k" "kerbit related work" entry (file "~/Documents/Org/kerbit.org")
+             "* TODO %?\n %i\n %a")
+            ("i" "must be done quickly" entry (file "~/Documents/Org/organizer.org")
+             "* INTR %?\n %i\n %a")
+            ))
+  #+end_src
+  
 ** Configure org
 
 #+begin_src emacs-lisp
@@ -440,9 +484,10 @@ Vertico is a light weight completion engine. The first section performs general 
          (visual-line-mode 1))
 
   (use-package org
-    :straight nil
+    :ensure nil
     :hook (org-mode . nate/org-mode-setup)
     :custom
+    (org-directory "~/Documents/Org")
     (org-ellipsis " ▾")
     (org-log-into-drawer t)
     (org-deadline-warning-days 7)
@@ -463,34 +508,11 @@ Vertico is a light weight completion engine. The first section performs general 
 
 #+end_src
 
-** Org-agenda
+** Org-roam
 
 #+begin_src emacs-lisp
-  (use-package org
-    :straight nil
-    :config
-    ;; Save Org buffers after refiling!
-    (advice-add 'org-refile :after 'org-save-all-org-buffers)
-    :custom
-    (org-agenda-files '("~/Documents/Org/Research.org"
-                        "~/Documents/Org/Thesis_Document.org"
-                        "~/Documents/Org/System_Configuration.org"))
-    (org-refile-targets '((org-agenda-files :maxlevel . 1)
-                          ("~/Documents/Org/Archive.org" :maxlevel . 1)))
-    (org-todo-keywords '((sequence "TODO(t)"
-                                   "INTR(i)"
-                                   "NEXT(n)"
-                                   "PROG(p)"
-                                   "WAITING(w)"
-                                   "|"
-                                   "DONE(d)"
-                                   "CANCELED(c)")))
-    (org-agenda-custom-commands '(("n" "Agenda for | INTR | PROG | NEXT"
-                                   ((agenda "" nil)
-                                    (todo "INTR" nil)
-                                    (todo "PROG" nil)
-                                    (todo "NEXT" nil)
-                                    nil)))))
+  (use-package org-roam
+    :ensure t)
 #+end_src
 
 ** Org tree slide
@@ -521,13 +543,8 @@ Vertico is a light weight completion engine. The first section performs general 
     :config
     (progn (show-smartparens-global-mode t))
     :hook
-    (org-mode . turn-on-smartparens-strict-mode)
+    ;; (org-mode . turn-on-smartparens-strict-mode) 
     (prog-mode . turn-on-smartparens-strict-mode))
-
-  (use-package evil-smartparens
-    :straight t
-    :hook
-    (smartparens-enabled-hook . evil-smartparens-mode))
 #+end_src
 
 ** Yasnippet
@@ -565,13 +582,6 @@ Vertico is a light weight completion engine. The first section performs general 
       :straight t)
 #+end_src
 
-** Evil nerd commenter
-
-#+begin_src emacs-lisp
-      (use-package evil-nerd-commenter
-        :straight t)
-#+end_src
-
 ** Rainbow delimiters 
 
 #+begin_src emacs-lisp
@@ -580,165 +590,33 @@ Vertico is a light weight completion engine. The first section performs general 
     :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
-* Evil Mode
-
-    #+begin_src emacs-lisp
-      (use-package evil
-      :init
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
-      (setq evil-want-C-u-scroll t)
-      (setq evil-want-C-i-jump nil)
-      :config
-      (evil-mode 1)
-      (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-      (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-      ;; Use visual line motions even outside of visual-line-mode buffers
-      (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-      (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-
-      (evil-set-initial-state 'messages-buffer-mode 'normal)
-      (evil-set-initial-state 'dashboard-mode 'normal))
-
-      (use-package evil-collection
-	:straight t
-	:after evil
-	:config
-	(evil-collection-init))
-    #+end_src
-
-* Treemacs
-
-#+begin_src emacs-lisp
-      (use-package treemacs
-      :straight t
-      :defer t
-      :init
-      (with-eval-after-load 'winum
-        (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-      :config
-      (progn
-        (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-              treemacs-deferred-git-apply-delay        0.5
-              treemacs-directory-name-transformer      #'identity
-              treemacs-display-in-side-window          t
-              treemacs-eldoc-display                   'simple
-              treemacs-file-event-delay                5000
-              treemacs-file-extension-regex            treemacs-last-period-regex-value
-              treemacs-file-follow-delay               0.2
-              treemacs-file-name-transformer           #'identity
-              treemacs-follow-after-init               t
-              treemacs-expand-after-init               t
-              treemacs-find-workspace-method           'find-for-file-or-pick-first
-              treemacs-git-command-pipe                ""
-              treemacs-goto-tag-strategy               'refetch-index
-              treemacs-indentation                     2
-              treemacs-indentation-string              " "
-              treemacs-is-never-other-window           nil
-              treemacs-max-git-entries                 5000
-              treemacs-missing-project-action          'ask
-              treemacs-move-forward-on-expand          nil
-              treemacs-no-png-images                   nil
-              treemacs-no-delete-other-windows         t
-              treemacs-project-follow-cleanup          nil
-              treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-              treemacs-position                        'left
-              treemacs-read-string-input               'from-child-frame
-              treemacs-recenter-distance               0.1
-              treemacs-recenter-after-file-follow      nil
-              treemacs-recenter-after-tag-follow       nil
-              treemacs-recenter-after-project-jump     'always
-              treemacs-recenter-after-project-expand   'on-distance
-              treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-              treemacs-show-cursor                     nil
-              treemacs-show-hidden-files               t
-              treemacs-silent-filewatch                nil
-              treemacs-silent-refresh                  nil
-              treemacs-sorting                         'alphabetic-asc
-              treemacs-select-when-already-in-treemacs 'move-back
-              treemacs-space-between-root-nodes        t
-              treemacs-tag-follow-cleanup              t
-              treemacs-tag-follow-delay                1.5
-              treemacs-text-scale                      nil
-              treemacs-user-mode-line-format           nil
-              treemacs-user-header-line-format         nil
-              treemacs-wide-toggle-width               70
-              treemacs-width                           35
-              treemacs-width-increment                 1
-              treemacs-width-is-initially-locked       t
-              treemacs-workspace-switch-cleanup        nil)
-
-        ;; The default width and height of the icons is 22 pixels. If you are
-        ;; using a Hi-DPI display, uncomment this to double the icon size.
-        ;;(treemacs-resize-icons 44)
-
-        (treemacs-follow-mode t)
-        (treemacs-filewatch-mode t)
-        (treemacs-fringe-indicator-mode 'always)
-
-        (pcase (cons (not (null (executable-find "git")))
-                     (not (null treemacs-python-executable)))
-          (`(t . t)
-           (treemacs-git-mode 'deferred))
-          (`(t . _)
-           (treemacs-git-mode 'simple)))
-
-        (treemacs-hide-gitignored-files-mode nil))
-      :bind
-      (:map global-map
-            ("M-0"       . treemacs-select-window)
-            ("C-x t 1"   . treemacs-delete-other-windows)
-            ("C-x t t"   . treemacs)
-            ("C-x t d"   . treemacs-select-directory)
-            ("C-x t B"   . treemacs-bookmark)
-            ("C-x t C-t" . treemacs-find-file)
-            ("C-x t M-t" . treemacs-find-tag)))
-
-    (use-package treemacs-projectile
-      :after (treemacs projectile)
-      :straight t)
-
-    (use-package treemacs-magit
-      :after (treemacs magit)
-      :straight t)
-    (use-package treemacs-all-the-icons
-      :straight t)
-#+end_src
-
 * Programming modes
 ** Python
 
 #+begin_src emacs-lisp
-  (use-package python-mode
-    :straight t)
+  (use-package elpy
+      :straight t
+      :defer t
+      :init
+      (advice-add 'python-mode :before 'elpy-enable))
 #+end_src
 
-** Lsp-mode
+** eglot
 
-language server support
 #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :straight t
-    :init
-    (setq lsp-keymap-prefix "C-c l")
-    :hook (python-mode . lsp)
-    (lsp-mode . lsp-enable-which-key-integration))
-
-  (use-package lsp-treemacs
-    :straight t)
-
+    (use-package eglot
+      :straight t) 
 #+end_src
 
 ** Better syntax highlighting
 #+begin_src emacs-lisp
-      (use-package tree-sitter
-	:straight t)
-      (use-package tree-sitter-langs
-	:straight t)
+  (use-package tree-sitter
+    :straight t)
+  (use-package tree-sitter-langs
+    :straight t)
 
-      (global-tree-sitter-mode)
-      (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
 
 ** Company frontend
@@ -752,22 +630,14 @@ language server support
   (use-package company-box
     :straight t
     :hook (company-mode . company-box-mode))
-    ;; :custom
-    ;; (company-box-icons-alist '(all-the-icons))
 #+end_src
 
 ** flycheck
+
 #+begin_src emacs-lisp
   (use-package flycheck
     :straight t
     :init (global-flycheck-mode))
-#+end_src
-
-** htmlize
-
-#+begin_src emacs-lisp
-   (use-package htmlize
-     :straight t)
 #+end_src
 
 * Docker
@@ -778,13 +648,6 @@ language server support
 #+end_src
 
 * Latex
-** language server support
-
-#+begin_src emacs-lisp
- (use-package lsp-latex
-    :straight t)
-#+end_src
-
 ** AUCTEX
 
 #+begin_src emacs-lisp
@@ -796,21 +659,35 @@ language server support
 
   (add-hook 'LaTeX-mode-hook 'visual-line-mode)
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+  (add-hook 'TeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  (add-hook 'LaTeX-mode-hook 'lsp)
-  (add-hook 'bibtex-mode-hook 'lsp)
-
-
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
   (setq reftex-plug-into-AUCTeX t)
+
+  ;; run latex compilation on save 
+  (defun run-latex ()
+    (interactive)
+    (let ((process (TeX-active-process))) (if process (delete-process process)))
+    (let ((TeX-save-query nil)) (TeX-save-document ""))
+    (TeX-command-menu "LaTeX"))
+
+  (add-hook 'LaTeX-mode-hook (lambda () (local-set-key (kbd "C-x C-s") #'run-latex)))
+
+  ;; Use pdf-tools to open PDF files
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-source-correlate-start-server t)
+
+  ;; Update PDF buffers after successful LaTeX runs
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
 #+end_src
 
 ** company-auctex
 #+begin_src emacs-lisp
-      (use-package company-auctex
-        :straight t
-        :hook
-        (LaTeX-mode company-auctex-init))
+  (use-package company-auctex
+    :straight t
+    :hook
+    (LaTeX-mode company-auctex-init))
 #+end_src
 
 ** cdlatex
@@ -829,9 +706,7 @@ language server support
     :straight t
     :config
     (general-create-definer nate/leader-keys
-      :keymaps '(normal insert visual emacs)
-      :prefix "SPC"
-      :global-prefix "M-SPC")
+      :prefix "M-o")
 #+end_src
 
 *** Keybindings for toggles
@@ -841,6 +716,7 @@ language server support
   (nate/leader-keys
     "t"  '(:ignore t :which-key "toggles")
     "tp"  '(org-tree-slide-mode :which-key "toggle presentation") ;; only works in org mode
+    "td"  '(dirvish-side :which-key "dirvish-side") ;; only works in org mode
     "tt" '(consult-theme :which-key "choose theme"))
 #+end_src
 
@@ -897,13 +773,17 @@ language server support
     "w" '(:ignore t :which-key "window")
     "ws" '(split-window-vertically :which-key "split horizontally")
     "wv" '(split-window-horizontally :which-key "split vertically")
-    "wn" '(ace-window :which-key "move to the next window")
-    "wd" '(evil-quit :which-key "quit window")
-    "wk" '(evil-window-up :which-key "move to the window up")
-    "wj" '(evil-window-down :which-key "move to the window down")
-    "wh" '(evil-window-left :which-key "move to the window left")
-    "wc" '(hydra-window/body :which-key "change window size")
-    "wl" '(evil-window-right :which-key "move to the window right"))
+    "wd" '(ace-delete-window :which-key "delete window")
+    "wn" '(ace-window :which-key "move to the next window"))
+#+end_src
+
+*** keybindings for navigation
+
+#+begin_src emacs-lisp
+  (nate/leader-keys
+    "n" '(:ignore :which-key "navigation")
+    "nl" '(avy-goto-line :which-key "goto line")
+    "nw" '(avy-goto-char-2 :which-key "goto word"))
 #+end_src
 
 *** Keybindings for Projectile
@@ -934,8 +814,7 @@ language server support
     (nate/leader-keys
       "a" '(:ignore t :which-key "Launchers")
       "av" '(shell-pop :which-key "shell-pop")
-      "ad" '(dired :which-key "open dired")
-      "ar" '(ranger :which-key "open ranger")
+      "ad" '(dirvish :which-key "open dired")
       "ae" '(eww :which-key "open eww"))
 #+end_src
 
@@ -957,19 +836,90 @@ language server support
       "u" '(:keymap perspective-map :package perspective :which-key "perspective"))
 #+end_src
 
-*** Keybindings for comment
-
-#+begin_src emacs-lisp
-  (nate/leader-keys
-    "c" '(:ignore t :which-key "Comment")
-    "ci" '(evilnc-comment-or-uncomment-lines :which-key "comment/uncomment")
-    "cl" '(evilnc-quick-comment-or-uncomment-to-the-line :which-key "quick comment/uncomment")
-    "cc" '(evilnc-copy-and-comment-lines :which-key "copy and comment lines")
-    "cp" '(evilnc-comment-or-uncomment-paragraphs :which-key "comment/uncomment paragraphs")
-    "cr" '(comment-or-uncomment-region :which-key "comment/uncomment region")
-    "cv" '(evilnc-toggle-invert-comment-line-by-line :which-key "toggle invert comment"))
-#+end_src
-
 * Irc
 
+#+begin_src emacs-lisp
+  (setq erc-server "irc.libera.chat"
+      erc-nick "cybass"    ; Change this!
+      erc-user-full-name "Nathan"  ; And this!
+      erc-track-shorten-start 8
+      erc-autojoin-channels-alist '(("irc.libera.chat" "#systemcrafters" "#emacs"))
+      erc-kill-buffer-on-part t
+            erc-auto-query 'bury)
+
+#+end_src
+
+* Mail
+
+#+begin_src emacs-lisp
+  (use-package mu4e
+    :ensure nil
+    ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
+    ;; :defer 20 ; Wait until 20 seconds after startup
+    :config
+
+    ;; This is set to 't' to avoid mail syncing issues when using mbsync
+    (setq mu4e-change-filenames-when-moving t)
+
+    ;; Refresh mail using isync every 10 minutes
+    (setq mu4e-update-interval (* 10 60))
+    (setq mu4e-get-mail-command "mbsync -a")
+    (setq mu4e-maildir "~/Mail")
+
+    (setq mu4e-drafts-folder "/[Gmail]/Drafts")
+    (setq mu4e-sent-folder   "/[Gmail]/Sent Mail")
+    (setq mu4e-refile-folder "/[Gmail]/All Mail")
+    (setq mu4e-trash-folder  "/[Gmail]/Trash")
+
+    (setq mu4e-maildir-shortcuts
+      '((:maildir "/Inbox"    :key ?i)
+        (:maildir "/[Gmail]/Sent Mail" :key ?s)
+        (:maildir "/[Gmail]/Trash"     :key ?t)
+        (:maildir "/[Gmail]/Drafts"    :key ?d)
+        (:maildir "/[Gmail]/All Mail"  :key ?a))))
+
+
+#+end_src
+
+* Elfeed
+
+#+begin_src emacs-lisp
+  (use-package elfeed
+    :straight t
+    :custom
+    (elfeed-feeds
+     '("https://www.masteringemacs.org/feed"
+       "https://emacsredux.com/atom.xml"
+       "https://oremacs.com/atom.xml"
+       "https://sachachua.com/blog/feed/"
+       "http://xahlee.info/emacs/emacs/blog.xml")))
+#+end_src
+
+* Eshell
+
+#+begin_src emacs-lisp
+
+  (setq eshell-prompt-function
+  (lambda ()
+  (concat
+  (propertize "┌─[" 'face `(:foreground "green"))
+  (propertize (user-login-name) 'face `(:foreground "red"))
+  (propertize "@" 'face `(:foreground "green"))
+  (propertize (system-name) 'face `(:foreground "blue"))
+  (propertize "]──[" 'face `(:foreground "green"))
+  (propertize (format-time-string "%H:%M" (current-time)) 'face `(:foreground "yellow"))
+  (propertize "]──[" 'face `(:foreground "green"))
+  (propertize (concat (eshell/pwd)) 'face `(:foreground "white"))
+  (propertize "]\n" 'face `(:foreground "green"))
+  (propertize "└─>" 'face `(:foreground "green"))
+  (propertize (if (= (user-uid) 0) " # " " $ ") 'face `(:foreground "green"))
+  )))
+
+  (defun eshell/clear ()
+    "Clear the eshell buffer."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (eshell-send-input)))
+#+end_src
 
