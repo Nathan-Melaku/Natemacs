@@ -33,7 +33,7 @@ The first thing to do is configure straight.el to manage my packages. In this re
 ** Vertico
 Vertico is a light weight completion engine. The first section performs general initialisation for this package.
 *** general init
-k
+
   #+begin_src emacs-lisp
     (use-package vertico
       :straight t
@@ -188,13 +188,6 @@ k
     "zoom"
     ("k" text-scale-increase "in")
     ("j" text-scale-decrease "out"))
-
-  ;; (defhydra hydra-window ()
-  ;;   "window size"
-  ;;   ("h" evil-window-decrease-width "left")
-  ;;   ("l" evil-window-increase-width "right")
-  ;;   ("j" evil-window-decrease-height "down")
-  ;;   ("k" evil-window-increase-height "up"))
 #+end_src
 
 ** Perspective
@@ -255,28 +248,71 @@ k
       :straight t)
 #+end_src
 
-* Registers
+** Toggle window split
 
 #+begin_src emacs-lisp
-  (set-register ?k (cons 'file "~/Documents/Org/kerbit.org"))
-  (set-register ?c (cons 'file "~/.config/emacs/config.org"))
-  (set-register ?o (cons 'file "~/Documents/Org/organizer.org"))
+  (defun toggle-window-split ()
+    (interactive)
+    (if (= (count-windows) 2)
+        (let* ((this-win-buffer (window-buffer))
+               (next-win-buffer (window-buffer (next-window)))
+               (this-win-edges (window-edges (selected-window)))
+               (next-win-edges (window-edges (next-window)))
+               (this-win-2nd (not (and (<= (car this-win-edges)
+                                           (car next-win-edges))
+                                       (<= (cadr this-win-edges)
+                                           (cadr next-win-edges)))))
+               (splitter
+                (if (= (car this-win-edges)
+                       (car (window-edges (next-window))))
+                    'split-window-horizontally
+                  'split-window-vertically)))
+          (delete-other-windows)
+          (let ((first-win (selected-window)))
+            (funcall splitter)
+            (if this-win-2nd (other-window 1))
+            (set-window-buffer (selected-window) this-win-buffer)
+            (set-window-buffer (next-window) next-win-buffer)
+            (select-window first-win)
+            (if this-win-2nd (other-window 1))))))
+
+  (define-key ctl-x-4-map "t" 'toggle-window-split)
+#+end_src
+
+** save backup and autosave in .emacs.d
+
+#+begin_src emacs-lisp
+    ;; Put autosave files (ie #foo#) and backup files (ie foo~) in ~/.emacs.d/.
+  (custom-set-variables
+    '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
+    '(backup-directory-alist '((".*" . "~/.emacs.d/backups/"))))
+
+  ;; create the autosave dir if necessary, since emacs won't.
+  (make-directory "~/.emacs.d/autosaves/" t)
 #+end_src
 
 * UI
 ** Disable unecessary defaults
 
   #+BEGIN_SRC emacs-lisp
-    ;; disable unneccessary modes
+
     (setq native-comp-async-report-warnings-errors nil)
+
+    ;; change cursor type and enale line highlighting
+    (setq-default cursor-type '(bar . 1))
+    (set-cursor-color "#ffffff")
+    (global-hl-line-mode +1)
+
+    ;; disable unneccessary modes
     (menu-bar-mode -1)
     (tool-bar-mode -1)
     (scroll-bar-mode -1)
+
     ;; add line numbers
     (column-number-mode)
 
-    (global-display-line-numbers-mode 'relative)
-    (setq display-line-numbers-type 'relative)
+    (global-display-line-numbers-mode t)
+    (setq display-line-numbers-type t)
     (dolist (mode '(term-mode-hook
                     vterm-mode-hook
                     eshell-mode-hook
@@ -416,8 +452,18 @@ k
     (dashboard-set-heading-icons t)
     (dashboard-set-file-icons t)
     (dashboard-center-content t)
+
     (dashboard-banner-logo-title "Welcome to NateEmacs")
     (initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
+    (setq dashboard-banner-official-png "~/Pictures/mine/natemacs.png")
+  #+end_src
+
+* Registers
+
+#+begin_src emacs-lisp
+  (set-register ?k (cons 'file "~/Documents/Org/kerbit.org"))
+  (set-register ?c (cons 'file "~/.config/emacs/config.org"))
+  (set-register ?o (cons 'file "~/Documents/Org/organizer.org"))
 #+end_src
 
 * Org Mode
@@ -467,15 +513,39 @@ k
 ** Org-caputre
 
 #+begin_src emacs-lisp
-    (global-set-key (kbd "C-c c") #'org-capture)
-    (setq org-capture-templates
-          '(("k" "kerbit related work" entry (file "~/Documents/Org/kerbit.org")
-             "* TODO %?\n %i\n %a")
-            ("i" "must be done quickly" entry (file "~/Documents/Org/organizer.org")
-             "* INTR %?\n %i\n %a")
-            ))
+  (global-set-key (kbd "C-c c") #'org-capture)
+  (setq org-capture-templates
+        '(("k" "kerbit related work" entry (file "~/Documents/Org/kerbit.org")
+           "* TODO %?\n %i\n %a")
+          ("i" "must be done quickly" entry (file "~/Documents/Org/organizer.org")
+           "* INTR %?\n %i\n %a")
+          ("t" "todo items " entry (file "~/Documents/Org/organizer.org")
+           "* TODO %?\n %i\n %a")
+          ))
   #+end_src
   
+** Org-roam
+
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory "~/Documents/Org/OrgRoam")
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ;; Dailies
+           ("C-c n j" . org-roam-dailies-capture-today))
+    :config
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode))
+;; ;; If using org-roam-protocol
+    ;; (require 'org-roam-protocol))
+#+end_src
+
 ** Configure org
 
 #+begin_src emacs-lisp
@@ -491,6 +561,7 @@ k
     (org-ellipsis " ▾")
     (org-log-into-drawer t)
     (org-deadline-warning-days 7)
+    (org-return-follows-link  t)
     (org-hide-emphasis-markers nil))
 #+end_src
 
@@ -506,13 +577,6 @@ k
     :straight t
     :hook (org-mode . efs/org-mode-visual-fill))
 
-#+end_src
-
-** Org-roam
-
-#+begin_src emacs-lisp
-  (use-package org-roam
-    :ensure t)
 #+end_src
 
 ** Org tree slide
@@ -543,8 +607,8 @@ k
     :config
     (progn (show-smartparens-global-mode t))
     :hook
-    ;; (org-mode . turn-on-smartparens-strict-mode) 
-    (prog-mode . turn-on-smartparens-strict-mode))
+    (org-mode . turn-on-smartparens-mode) 
+    (prog-mode . turn-on-smartparens-mode))
 #+end_src
 
 ** Yasnippet
@@ -599,6 +663,14 @@ k
       :defer t
       :init
       (advice-add 'python-mode :before 'elpy-enable))
+
+  (use-package pipenv
+    :straight t
+    :hook (python-mode . pipenv-mode)
+    :init
+    (setq
+     pipenv-projectile-after-switch-function
+     #'pipenv-projectile-after-switch-extended))
 #+end_src
 
 ** eglot
@@ -638,6 +710,27 @@ k
   (use-package flycheck
     :straight t
     :init (global-flycheck-mode))
+#+end_src
+
+** yaml
+
+#+begin_src emacs-lisp
+  (require 'yaml-mode)
+  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+#+end_src
+
+** markdown
+
+#+begin_src emacs-lisp
+  (use-package markdown-mode
+  :straight t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown"))
+
+  (use-package markdown-preview-mode
+    :straight t
+    :custom
+    (markdown-command "multimarkdown"))
 #+end_src
 
 * Docker
@@ -706,7 +799,7 @@ k
     :straight t
     :config
     (general-create-definer nate/leader-keys
-      :prefix "M-o")
+      :prefix "M-n") 
 #+end_src
 
 *** Keybindings for toggles
@@ -833,7 +926,7 @@ k
 
 #+begin_src emacs-lisp
     (nate/leader-keys
-      "u" '(:keymap perspective-map :package perspective :which-key "perspective"))
+      "u" '(:keymap perspective-map :package perspective :which-key "perspective")) 
 #+end_src
 
 * Irc
