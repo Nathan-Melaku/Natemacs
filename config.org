@@ -88,33 +88,33 @@ Vertico is a light weight completion engine. The first section performs general 
       (recentf-mode 1)
       :bind
       ("C-x b" . consult-buffer)
-      ("M-y" . consult-yank-from-kill-ring)
-      ("C-s" . consult-line-multi))
-
+      ("M-y" . consult-yank-from-kill-ring))
 #+end_src
 
 *** Embark
 
 #+begin_src emacs-lisp
-  (use-package embark
-    :straight t
+      (use-package embark
+        :straight t
 
-    :bind
-    (("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+        :bind
+        (("C-h B" . embark-bindings)
+         ("C-." . embark-act)
+         ("M-." . embark-dwim)) ;; alternative for `describe-bindings'
 
-    :config
-    ;; Hide the mode line of the Embark live/completions buffers
-    (add-to-list 'display-buffer-alist
-		 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		   nil
-		   (window-parameters (mode-line-format . none)))))
+        :config
+        ;; Hide the mode line of the Embark live/completions buffers
+        (add-to-list 'display-buffer-alist
+                     '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                       nil
+                       (window-parameters (mode-line-format . none)))))
 
-  (use-package embark-consult
-    :straight t
-    :after (embark consult)
-    :demand t
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode))
+      (use-package embark-consult
+        :straight t
+        :after (embark consult)
+        :demand t
+        :hook
+        (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 *** All the icons completion
@@ -158,17 +158,6 @@ Vertico is a light weight completion engine. The first section performs general 
      :straight t)
 #+end_src
 
-** peep dired
-
-#+begin_src emacs-lisp
-  ;;preview files in dired
-  (use-package peep-dired
-    :straight t
-    :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-    :bind (:map dired-mode-map
-                ("p" . peep-dired)))
-#+end_src
-
 ** Pdf tools
 
 #+begin_src emacs-lisp
@@ -206,11 +195,6 @@ Vertico is a light weight completion engine. The first section performs general 
     (unless (equal persp-mode t)
       (persp-mode)))
 
-  ;; (use-package treemacs-perspective
-  ;;   :straight t
-  ;;   :after (treemacs perspective)
-  ;;   :config (treemacs-set-scope-type 'Perspectives))
-
   (use-package persp-projectile
     :straight t)
 
@@ -233,12 +217,41 @@ Vertico is a light weight completion engine. The first section performs general 
 #+begin_src emacs-lisp
   (use-package dirvish
     :straight t
+    :bind ("C-d" . 'dirvish-dispatch)
     :custom
     (dirvish-bookmarks-alist
      '(("h" "~/"                          "Home")
-       ("d" "~/Downloads/"                "Downloads")
+       ("d" "~/Documents/"                "Documents")
+       ("D" "~/Downloads/"                "Downloads")
+       ("v" "~/Videos/"                   "Videos")
        ("m" "/mnt/"                       "Drives")
        ("t" "~/.local/share/Trash/files/" "TrashCan"))))
+
+  (add-hook 'dired-mode-hook 'dired-omit-mode)
+
+  (defun nate/dired-view ()
+    "View files, through and external media"
+    (interactive)
+    (let ((files (dired-get-marked-files)))
+      (xdg-open (car files) t)))
+
+  (defun xdg-open (file &optional async)
+    "Opens file with xdg-open. Without optional argument ASYNC, it will wait for the file to finish playing or review."
+    (let ((command (format "xdg-open '%s'" file)))
+      (if async
+          (async-shell-command command)
+        (shell-command command))))
+
+  (defun xdg-open-files (files)
+    "Opens list of files with xdg-open one by one, waiting for each to finish."
+    (dolist (file files)
+      (xdg-open file)))
+  ;; hide dot files
+  (setq dired-omit-files "^\\.")
+  ;; Finally mapping the key V to dired-mode-map
+  (define-key dired-mode-map "V" 'nate/dired-view)
+  (define-key dired-mode-map "h" 'dired-omit-mode)
+  (define-key dired-mode-map "b" 'dired-up-directory)
 #+end_src
 
 ** Ace window
@@ -291,6 +304,25 @@ Vertico is a light weight completion engine. The first section performs general 
   (make-directory "~/.emacs.d/autosaves/" t)
 #+end_src
 
+** God Mode
+
+#+begin_src emacs-lisp
+  (use-package god-mode
+    :straight t
+    :init
+    (setq god-mode-enable-function-key-translation nil)
+    :custom
+    (god-exempt-major-modes nil)
+    (god-exempt-predicates nil)
+    :bind
+    ("H-m" . god-local-mode))
+
+  (defun nate/my-god-mode-update-cursor-type ()
+    (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
+
+  (god-mode)    
+  (add-hook 'post-command-hook #'nate/my-god-mode-update-cursor-type)
+#+end_src
 * UI
 ** Disable unecessary defaults
 
@@ -298,8 +330,12 @@ Vertico is a light weight completion engine. The first section performs general 
 
     (setq native-comp-async-report-warnings-errors nil)
 
+    (use-package frame
+      :ensure nil
+      :bind
+      ("C-z" . nil))
+
     ;; change cursor type and enale line highlighting
-    (setq-default cursor-type '(bar . 1))
     (set-cursor-color "#ffffff")
     (global-hl-line-mode +1)
 
@@ -322,7 +358,6 @@ Vertico is a light weight completion engine. The first section performs general 
                     image-mode-hook
                     dired-mode-hook
                     markdown-mode-hook
-
                     pdf-view-mode-hook))
       (add-hook mode (lambda () (display-line-numbers-mode 0))))
   #+END_SRC
@@ -330,8 +365,8 @@ Vertico is a light weight completion engine. The first section performs general 
 ** Transparency
 
 #+begin_src emacs-lisp
- (set-frame-parameter (selected-frame) 'alpha '(97 . 95))
- (add-to-list 'default-frame-alist '(alpha . (97 . 95)))
+ (set-frame-parameter (selected-frame) 'alpha '(90 . 92))
+ (add-to-list 'default-frame-alist '(alpha . (90 . 92)))
 #+end_src
 
 ** Set Theme
@@ -340,12 +375,11 @@ Vertico is a light weight completion engine. The first section performs general 
     (use-package doom-themes
       :straight t
       :config
-      (load-theme 'doom-snazzy t)
+      (load-theme 'doom-solarized-dark-high-contrast t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
-      ;; Enable custom neotree theme (all-the-icons must be installed!)
-      (doom-themes-neotree-config)
+            
       ;; Corrects (and improves) org-mode's native fontification.
       (doom-themes-org-config))
 
@@ -421,9 +455,10 @@ Vertico is a light weight completion engine. The first section performs general 
 ** Dired icons
 
 #+begin_src emacs-lisp
-     (use-package all-the-icons-dired
-       :straight (all-the-icons-dired :type git :host github :repo "jtbm37/all-the-icons-dired")
-       :hook (dired-mode . all-the-icons-dired-mode))
+       (use-package all-the-icons-dired
+         :straight (all-the-icons-dired :type git :host github :repo "jtbm37/all-the-icons-dired")
+         :hook (dirvish-mode . all-the-icons-dired-mode)
+         (dired-mode . all-the-icons-dired-mode))
 #+end_src
 
 ** Rc file syntax
@@ -447,7 +482,7 @@ Vertico is a light weight completion engine. The first section performs general 
     (dashboard-setup-startup-hook)
     :custom
     (dashboard-projects-switch-function 'projectile-persp-switch-project)
-    (dashboard-items '((agenda . 3)
+    (dashboard-items '((agenda . 6)
                        (registers . 3)))
     (dashboard-set-heading-icons t)
     (dashboard-set-file-icons t)
@@ -457,9 +492,8 @@ Vertico is a light weight completion engine. The first section performs general 
     (initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
     (setq dashboard-banner-official-png "~/Pictures/mine/natemacs.png")
   #+end_src
-
+  
 * Registers
-
 #+begin_src emacs-lisp
   (set-register ?k (cons 'file "~/Documents/Org/kerbit.org"))
   (set-register ?c (cons 'file "~/.config/emacs/config.org"))
@@ -513,15 +547,15 @@ Vertico is a light weight completion engine. The first section performs general 
 ** Org-caputre
 
 #+begin_src emacs-lisp
+  (setq flycheck-disabled-checkers '(proselint))
   (global-set-key (kbd "C-c c") #'org-capture)
   (setq org-capture-templates
         '(("k" "kerbit related work" entry (file "~/Documents/Org/kerbit.org")
-           "* TODO %?\n %i\n %a")
+           "* TODO %?\n %i\n")
           ("i" "must be done quickly" entry (file "~/Documents/Org/organizer.org")
-           "* INTR %?\n %i\n %a")
+           "* INTR %?\n %i\n")
           ("t" "todo items " entry (file "~/Documents/Org/organizer.org")
-           "* TODO %?\n %i\n %a")
-          ))
+           "* TODO %?\n %i\n")))
   #+end_src
   
 ** Org-roam
@@ -531,6 +565,7 @@ Vertico is a light weight completion engine. The first section performs general 
     :ensure t
     :custom
     (org-roam-directory "~/Documents/Org/OrgRoam")
+    (org-roam-completion-everywhere t)
     :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n g" . org-roam-graph)
@@ -542,8 +577,17 @@ Vertico is a light weight completion engine. The first section performs general 
     ;; If you're using a vertical completion framework, you might want a more informative completion interface
     (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
     (org-roam-db-autosync-mode))
-;; ;; If using org-roam-protocol
-    ;; (require 'org-roam-protocol))
+
+  (use-package org-roam-ui
+    :ensure t
+    :after org-roam
+    :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
 #+end_src
 
 ** Configure org
@@ -560,7 +604,7 @@ Vertico is a light weight completion engine. The first section performs general 
     (org-directory "~/Documents/Org")
     (org-ellipsis " ▾")
     (org-log-into-drawer t)
-    (org-deadline-warning-days 7)
+    (org-deadline-warning-days 2)
     (org-return-follows-link  t)
     (org-hide-emphasis-markers nil))
 #+end_src
@@ -568,14 +612,14 @@ Vertico is a light weight completion engine. The first section performs general 
 ** Visual fill column
 
 #+begin_src emacs-lisp
-   (defun efs/org-mode-visual-fill ()
+   (defun nate/org-mode-visual-fill ()
     (setq visual-fill-column-width 100
 	  visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
 
   (use-package visual-fill-column
     :straight t
-    :hook (org-mode . efs/org-mode-visual-fill))
+    :hook (org-mode . nate/org-mode-visual-fill))
 
 #+end_src
 
@@ -593,6 +637,14 @@ Vertico is a light weight completion engine. The first section performs general 
     :ensure t
     :custom
     (org-reveal-root "file:///home/nathan/Documents/Tools/reveal.js"))
+#+end_src
+
+** Org-cv
+
+#+begin_src emacs-lisp
+  (use-package ox-moderncv
+    :load-path "~/Documents/Tools/org-cv"
+    :init (require 'ox-altacv))
 #+end_src
 
 * Programming Helpers
@@ -630,6 +682,7 @@ Vertico is a light weight completion engine. The first section performs general 
     :config
     (projectile-mode +1)
     :custom
+    (projectile-enable-caching t)
     (projectile-switch-project-action #'projectile-dired)
     (projectile-project-search-path '("~/Documents/Projects/" "~/Documents/Thesis/")))
 #+end_src
@@ -676,8 +729,9 @@ Vertico is a light weight completion engine. The first section performs general 
 ** eglot
 
 #+begin_src emacs-lisp
-    (use-package eglot
-      :straight t) 
+      (use-package eglot
+        :straight t
+        :hook (python-mode . eglot-ensure))
 #+end_src
 
 ** Better syntax highlighting
@@ -691,17 +745,11 @@ Vertico is a light weight completion engine. The first section performs general 
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 #+end_src
 
-** Company frontend
+** Jedi frontend
 
 #+begin_src emacs-lisp
-  (use-package company
-    :straight t
-    :config
-    (add-hook 'after-init-hook 'global-company-mode))
-
-  (use-package company-box
-    :straight t
-    :hook (company-mode . company-box-mode))
+  (use-package jedi
+    :ensure t)
 #+end_src
 
 ** flycheck
@@ -799,7 +847,7 @@ Vertico is a light weight completion engine. The first section performs general 
     :straight t
     :config
     (general-create-definer nate/leader-keys
-      :prefix "M-n") 
+      :prefix "H-n") 
 #+end_src
 
 *** Keybindings for toggles
@@ -808,6 +856,7 @@ Vertico is a light weight completion engine. The first section performs general 
   ;; test with theme
   (nate/leader-keys
     "t"  '(:ignore t :which-key "toggles")
+    "tw" '(toggle-window-split :which-key "toggle window split")
     "tp"  '(org-tree-slide-mode :which-key "toggle presentation") ;; only works in org mode
     "td"  '(dirvish-side :which-key "dirvish-side") ;; only works in org mode
     "tt" '(consult-theme :which-key "choose theme"))
@@ -818,16 +867,6 @@ Vertico is a light weight completion engine. The first section performs general 
 #+begin_src emacs-lisp
     (nate/leader-keys
       "SPC" '(execute-extended-command :which-key "execute command"))
-#+end_src
-
-*** Keybindings for Embark
-
-#+begin_src emacs-lisp
-  ;; Embark
-  (nate/leader-keys
-    "e"  '(:ignore t :which-key "Embark")
-    "ea"  '(embark-act :which-key "embark Act")
-    "ed"  '(embark-dwim :which-key "embark Dwim"))
 #+end_src
 
 *** Keybindings for Zoom
@@ -882,44 +921,44 @@ Vertico is a light weight completion engine. The first section performs general 
 *** Keybindings for Projectile
 
 #+begin_src emacs-lisp
-    ;; Projectile
-    (nate/leader-keys
-      "p" '(projectile-command-map :which-key "Projectile")
-      "pb" '(consult-projectile :which-key "consult projectile switch to buffer"))
+  ;; Projectile
+  (nate/leader-keys
+    "p" '(projectile-command-map :which-key "Projectile")
+    "pb" '(consult-projectile :which-key "consult projectile switch to buffer"))
 #+end_src
 
 *** Keybindings for Magit
 
 #+begin_src emacs-lisp
-    ;; Magit
-    (nate/leader-keys
-      "m" '(:ignore t :which-key "Magit")
-      "ma" '(magit-stage :which-key "Magit stage")
-      "ml" '(magit-log :which-key "Magit log")
-      "md" '(magit-diff :which-key "Magit diff")
-      "ms" '(magit-status :which-key "Magit status"))
+  ;; Magit
+  (nate/leader-keys
+    "m" '(:ignore t :which-key "Magit")
+    "ma" '(magit-stage :which-key "Magit stage")
+    "ml" '(magit-log :which-key "Magit log")
+    "md" '(magit-diff :which-key "Magit diff")
+    "ms" '(magit-status :which-key "Magit status"))
 #+end_src
 
 *** Keybindings for Program Launchers
 
 #+begin_src emacs-lisp
-    ;; Program Launchers
-    (nate/leader-keys
-      "a" '(:ignore t :which-key "Launchers")
-      "av" '(shell-pop :which-key "shell-pop")
-      "ad" '(dirvish :which-key "open dired")
-      "ae" '(eww :which-key "open eww"))
+  ;; Program Launchers
+  (nate/leader-keys
+    "a" '(:ignore t :which-key "Launchers")
+    "av" '(shell-pop :which-key "shell-pop")
+    "ad" '(dirvish :which-key "open dired")
+    "ae" '(eww :which-key "open eww"))
 #+end_src
 
 *** Keybindings for File Operations
 
 #+begin_src emacs-lisp
-    ;; File operations
-    (nate/leader-keys
-      "f" '(:ignore t :which-key "file operations")
-      "fo" '(find-file :which-key "find-file")
-      "fs" '(save-buffer :which-key "save-file")
-      "fr" '(consult-recent-file :which-key "consult-recent-file")))
+  ;; File operations
+  (nate/leader-keys
+    "f" '(:ignore t :which-key "file operations")
+    "fo" '(find-file :which-key "find-file")
+    "fs" '(save-buffer :which-key "save-file")
+    "fr" '(consult-recent-file :which-key "consult-recent-file")))
 #+end_src
 
 *** Keybindings for Perspective
@@ -927,6 +966,12 @@ Vertico is a light weight completion engine. The first section performs general 
 #+begin_src emacs-lisp
     (nate/leader-keys
       "u" '(:keymap perspective-map :package perspective :which-key "perspective")) 
+#+end_src
+
+*** bind M-SPC to set mark command
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "M-SPC") #'set-mark-command)
 #+end_src
 
 * Irc
@@ -982,10 +1027,13 @@ Vertico is a light weight completion engine. The first section performs general 
     :custom
     (elfeed-feeds
      '("https://www.masteringemacs.org/feed"
+       "https://www.zerodayinitiative.com/rss/upcoming/"
+       "https://www.zerodayinitiative.com/rss/published/"
+       "https://www.zerodayinitiative.com/blog/?format=rss"
        "https://emacsredux.com/atom.xml"
        "https://oremacs.com/atom.xml"
        "https://sachachua.com/blog/feed/"
-       "http://xahlee.info/emacs/emacs/blog.xml")))
+       "https://archlinux.org/feeds/news/")))
 #+end_src
 
 * Eshell
@@ -1015,4 +1063,13 @@ Vertico is a light weight completion engine. The first section performs general 
       (erase-buffer)
       (eshell-send-input)))
 #+end_src
+
+* Misc
+
+#+begin_src emacs-lisp
+  (use-package speed-type
+    :straight t)
+#+end_src
+
+
 
