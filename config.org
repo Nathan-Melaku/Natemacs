@@ -1,5 +1,6 @@
 #+TITLE: Natemacs Config
 #+AUTHOR: Nathan Melaku
+#+OPTIONS: toc:2
 
 This is Natemacs. My emacs config. My main use case of emacs is mainly Note taking, Frontend development. Simple Java programming, example when studing for ocjp, Inteliij is hard to beat for professional development.
 
@@ -247,14 +248,6 @@ Set general variables for sane workflow. 🔥
 
 #+begin_src emacs-lisp
   (use-package lua-mode)
-#+end_src
-
-** Typescript
-
-#+begin_src emacs-lisp
-  ;; (use-package typescript-mode
-  ;;   :config
-  ;;   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode)))
 #+end_src
 
 ** Web mode

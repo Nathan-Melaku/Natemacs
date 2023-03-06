@@ -1,8 +1,13 @@
 * Installation
 
-Before installing make sure to backup your current emacs configuration. 
+Requred Packages
+- *Font:* [[https://github.com/Trzcin/Fira-Code-Nerd][Firacode Nerd Font]], [[https://learn.microsoft.com/en-us/windows/apps/design/downloads/#fonts][Segoe UI Variable]]
+- *Software:* fd, ripgrep
+- *Yasnippet:* Snippets are assumed to be stored in ~/Tools/yasnippet/. Can be changed by setting =yas-snippet-dirs= variable.
+  
+Before installing make sure to backup your current emacs configuration.
 
-#+begin_src bash
+#+begin_src bash 
   git clone https://github.com/Nathan-Melaku/Natemacs.git
   cd Natemacs
   mv -f * ~/.emacs.d/
