@@ -138,29 +138,53 @@ Set general variables for sane workflow. 🔥
 
   #+BEGIN_SRC emacs-lisp
     ;; org bullet
-     (use-package org-bullets
-       :hook (org-mode . org-bullets-mode)
-       :custom
-       (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    (use-package org-bullets
+      :custom
+      (org-bullets-bullet-list '("☯" "◉" "○" "✸" "✿" "✜" "▶"))
+      (org-ellipsis "⤵")
+      :hook (org-mode . org-bullets-mode))
   #+END_SRC
 
 ** Configure org
 
 #+begin_src emacs-lisp
   (defun nate/org-mode-setup ()
-         (org-indent-mode)
-         (visual-line-mode 1))
+    (org-indent-mode)
+    (visual-line-mode 1))
 
   (use-package org
     :ensure nil
     :hook (org-mode . nate/org-mode-setup)
     :custom
     (org-directory "~/Documents/Org")
-    (org-ellipsis " ▾")
     (org-log-into-drawer t)
     (org-deadline-warning-days 2)
     (org-return-follows-link  t)
-    (org-hide-emphasis-markers nil))
+    (org-hide-emphasis-markers nil)
+    :config
+    (setq org-list-demote-modify-bullet
+          (quote (("+" . "-")
+                  ("-" . "+")
+                  ("*" . "-")
+                  ("1." . "-")
+                  ("1)" . "-")
+                  ("A)" . "-")
+                  ("B)" . "-")
+                  ("a)" . "-")
+                  ("b)" . "-")
+                  ("A." . "-")
+                  ("B." . "-")
+                  ("a." . "-")
+                  ("b." . "-")))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([+]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
 #+end_src
 
 ** Visual fill column

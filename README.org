@@ -8,8 +8,5 @@ Requred Packages
 Before installing make sure to backup your current emacs configuration.
 
 #+begin_src bash 
-  git clone https://github.com/Nathan-Melaku/Natemacs.git
-  cd Natemacs
-  mv -f * ~/.emacs.d/
+  git clone https://github.com/Nathan-Melaku/Natemacs.git ~/.emacs.d
 #+end_src
-
