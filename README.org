@@ -1,0 +1,10 @@
+* Installation
+
+Before installing make sure to backup your current emacs configuration. 
+
+#+begin_src bash
+  git clone https://github.com/Nathan-Melaku/Natemacs.git
+  cd Natemacs
+  mv -f * ~/.emacs.d/
+#+end_src
+
