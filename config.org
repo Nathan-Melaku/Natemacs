@@ -1,8 +1,9 @@
-#+TITLE: Natemacs Config
++TITLE: Natemacs Config
 #+AUTHOR: Nathan Melaku
 #+OPTIONS: toc:2
 
-This is Natemacs. My emacs config. My main use case of emacs is mainly Note taking, Frontend development. Simple Java programming, example when studing for ocjp, Inteliij is hard to beat for professional development.
+This is Natemacs, My emacs config. Main use case of emacs is mainly Note taking,
+Frontend development, Simple Java programming, example when studing for ocjp.
 
 |----+-----------------------------|
 | No | Use case                    |
@@ -14,6 +15,61 @@ This is Natemacs. My emacs config. My main use case of emacs is mainly Note taki
 |  5 | :TODO Latex                 |
 |  6 | Basic File Management       |
 |----+-----------------------------|
+
+* Table Of Contents     :noexport:TOC_2:
+- [[#general-defaults][General Defaults]]
+- [[#package-management][Package Management]]
+  - [[#setup-packageel-to-work-with-melpa][Setup package.el to work with MELPA.]]
+  - [[#installing-use-package][Installing use-package]]
+- [[#ui][UI]]
+  - [[#disable-unwanted-defaults][Disable unwanted defaults]]
+  - [[#set-theme][Set Theme]]
+  - [[#font][Font]]
+  - [[#modeline][Modeline]]
+  - [[#useful-config][Useful Config]]
+- [[#org-mode][Org Mode]]
+  - [[#org-bullets][Org bullets]]
+  - [[#configure-org][Configure org]]
+  - [[#visual-fill-column][Visual fill column]]
+  - [[#org-tree-slide][Org tree slide]]
+  - [[#org-roam][Org Roam]]
+  - [[#org-toc][Org toc]]
+- [[#programming-stuff][Programming Stuff]]
+  - [[#yasnippet][Yasnippet]]
+  - [[#origami][Origami]]
+  - [[#treesitter][Treesitter]]
+  - [[#editor-config][Editor config]]
+  - [[#lsp][Lsp]]
+  - [[#yaml][Yaml]]
+  - [[#json][Json]]
+  - [[#lua][lua]]
+  - [[#web-mode][Web mode]]
+  - [[#company][Company]]
+  - [[#magit][Magit]]
+  - [[#prettier-js][Prettier js]]
+  - [[#java][Java]]
+  - [[#restclient][RestClient]]
+  - [[#devdocs-browser][DevDocs Browser]]
+  - [[#docker][Docker]]
+- [[#utils][Utils]]
+  - [[#pdf-tools][Pdf Tools]]
+  - [[#epub][Epub]]
+  - [[#vterm][Vterm]]
+  - [[#exec-path][Exec path]]
+  - [[#vertico][Vertico]]
+  - [[#orderless][Orderless]]
+  - [[#marginalia][Marginalia]]
+  - [[#consult][Consult]]
+  - [[#which-key][Which Key]]
+  - [[#all-the-icons][All the icons]]
+  - [[#multiple-cursors][Multiple Cursors]]
+  - [[#expand-region][Expand Region]]
+  - [[#ace-window][Ace-window]]
+  - [[#avy][Avy]]
+  - [[#treemacs][Treemacs]]
+  - [[#dired][Dired]]
+  - [[#emoji][Emoji]]
+  - [[#beacon][Beacon]]
 
 * General Defaults
 Set general variables for sane workflow. 🔥
@@ -73,15 +129,17 @@ Set general variables for sane workflow. 🔥
   (global-display-line-numbers-mode t)
   (setq display-line-numbers-type t)
   (dolist (mode '(term-mode-hook
-                  vterm-mode-hook
-                  eshell-mode-hook
-                  org-mode-hook
-                  ranger-mode-hook
-                  org-agenda-mode-hook
-                  image-mode-hook
-                  dired-mode-hook
-                  markdown-mode-hook
-                  pdf-view-mode-hook))
+		  vterm-mode-hook
+		  eshell-mode-hook
+		  org-mode-hook
+		  ranger-mode-hook
+		  org-agenda-mode-hook
+		  image-mode-hook
+		  dired-mode-hook
+		  eww-mode-hook
+		  nov-mode-hook
+		  markdown-mode-hook
+		  pdf-view-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
@@ -131,6 +189,17 @@ Set general variables for sane workflow. 🔥
 
 #+begin_src emacs-lisp
   (recentf-mode 1)
+
+  (use-package cursory
+    :bind ("C-c p" . cursory-set-preset)
+    :init
+    ;; Set last preset or fall back to desired style from `cursory-presets'.
+    (cursory-set-preset (or (cursory-restore-latest-preset) 'bar))
+    :hook
+    ;; The other side of `cursory-restore-latest-preset'.
+    (kill-emacs-hook . cursory-store-latest-preset))
+
+
 #+end_src
 
 * Org Mode
@@ -154,7 +223,6 @@ Set general variables for sane workflow. 🔥
 
   (use-package org
     :ensure nil
-    :hook (org-mode . nate/org-mode-setup)
     :custom
     (org-directory "~/Documents/Org")
     (org-log-into-drawer t)
@@ -191,12 +259,16 @@ Set general variables for sane workflow. 🔥
 
 #+begin_src emacs-lisp
    (defun nate/org-mode-visual-fill ()
+     "vertical column on the side"
+     (interactive)
     (setq visual-fill-column-width 100
 	  visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
 
   (use-package visual-fill-column
-    :hook (org-mode . nate/org-mode-visual-fill))
+    :hook
+    (org-mode . nate/org-mode-visual-fill)
+    (Markdown-mode . nate/org-mode-visual-fill))
 #+end_src
 
 ** Org tree slide
@@ -227,6 +299,15 @@ Set general variables for sane workflow. 🔥
   (require 'org-roam-protocol))
 #+end_src
 
+** Org toc
+
+#+begin_src emacs-lisp
+  (use-package toc-org
+  :defer t
+  :hook ((org-mode . toc-org-mode)
+         (markdown-mode . toc-org-mode)))
+#+end_src
+
 * Programming Stuff
 ** Yasnippet
 
@@ -236,6 +317,11 @@ Set general variables for sane workflow. 🔥
     (setq yas-snippet-dirs '("~/Tools/yasnippet"))
     (yas-global-mode 1))
 #+END_SRC
+** Origami
+
+#+begin_src emacs-lisp
+  (use-package origami)
+#+end_src
 
 ** Treesitter
 
@@ -254,6 +340,32 @@ Set general variables for sane workflow. 🔥
   (use-package editorconfig
     :config
     (editorconfig-mode 1))
+#+end_src
+
+** Lsp
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :hook (
+           (web-mode . lsp-deferred)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp-deferred
+    :custom
+    (lsp-log-io nil)
+    (lsp-keymap-prefix "C-c l")
+    (lsp-restart 'auto-restart)
+    (lsp-ui-sideline-show-diagnostics t)
+    (lsp-ui-sideline-show-code-actions t)
+    (lsp-diagnostics-providera :flymake)
+    (lsp-ui-doc-enable t)
+    (lsp-ui-doc-position 'at-point)
+    :bind ("C-." . lsp-ui-peek-find-definitions))
+
+  (use-package lsp-ui
+    :commands lsp-ui-mode)
+
+  (global-set-key (kbd "C-c N") #'flymake-goto-next-error)
+  (global-set-key (kbd "C-c P") #'flymake-goto-prev-error)
 #+end_src
 
 ** Yaml
@@ -299,10 +411,12 @@ Set general variables for sane workflow. 🔥
 ** Company
 
 #+begin_src emacs-lisp
-  (setq company-minimum-prefix-length 1
-        company-idle-delay 0.0)
   (use-package company
-    :config (global-company-mode t))
+    :config 
+    (global-company-mode t)
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
 #+end_src
 
 ** Magit
@@ -310,33 +424,6 @@ Set general variables for sane workflow. 🔥
 #+begin_src emacs-lisp
   (use-package magit
     :bind (("C-x g" . magit-status)))
-#+end_src
-
-** LSP
-
-#+begin_src emacs-lisp
-  (setq lsp-log-io nil)
-  (setq lsp-keymap-prefix "C-c l")
-  (setq lsp-restart 'auto-restart)
-  (setq lsp-ui-sideline-show-diagnostics t)
-  (setq lsp-ui-sideline-show-code-actions t)
-  (setq lsp-diagnostics-providera :flymake)
-  (setq lsp-ui-doc-enable t)
-  (setq lsp-ui-doc-position 'at-point)
-  (global-set-key (kbd "C-.") #'lsp-ui-peek-find-definitions)
-
-  (use-package lsp-mode
-    :hook (
-           (web-mode . lsp-deferred)
-           (lsp-mode . lsp-enable-which-key-integration)
-           )
-    :commands lsp-deferred)
-
-  (use-package lsp-ui
-    :commands lsp-ui-mode)
-
-  (global-set-key (kbd "C-c N") #'flymake-goto-next-error)
-  (global-set-key (kbd "C-c P") #'flymake-goto-prev-error)
 #+end_src
 
 ** Prettier js
@@ -360,14 +447,28 @@ Set general variables for sane workflow. 🔥
 ** Java
 
 #+begin_src emacs-lisp
-  (use-package lsp-java)
-  (add-hook 'java-mode-hook #'lsp)
+    (use-package lsp-java
+      :hook (java-mode-hook . lsp))
+
 #+end_src
 
 ** RestClient
 
 #+begin_src emacs-lisp
   (use-package restclient)
+#+end_src
+
+** DevDocs Browser
+
+#+begin_src emacs-lisp
+  (use-package devdocs-browser
+    :defer t)
+#+end_src
+
+** Docker
+
+#+begin_src emacs-lisp
+  (use-package docker)
 #+end_src
 
 * Utils
@@ -379,20 +480,57 @@ Set general variables for sane workflow. 🔥
     (pdf-tools-install))
 #+end_src
 
+** Epub
+
+#+begin_src emacs-lisp
+
+    (defun my-centre-width ()
+      "Return a fill column that makes centring pleasant regardless of screen size"
+      (let ((window-width (window-width)))
+	(floor (if (<= window-width (* 1.1 fill-column))
+		   (* 0.9 window-width)
+		 (max (/ window-width 2) fill-column)))))
+
+
+    (defun my-nov-font-setup ()
+      (face-remap-add-relative 'variable-pitch :family "Liberation Serif"
+			       :height 1.3)
+      (setq fill-column (my-centre-width)
+                nov-text-width (- fill-column 2)
+                visual-fill-column-center-text t))
+
+    (use-package nov
+      :init
+      (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+      :hook 
+      ((nov-mode . visual-line-mode)
+       (nov-mode . visual-fill-column-mode)
+       (nov-mode . my-nov-font-setup)
+       (nov-mode . nate/org-mode-visual-fill)))
+#+end_src
+
+Simple function to hide ^M line ending (dos end of line). They appear on some Epub files and log files.
+
+#+begin_src emacs-lisp
+  (defun remove-dos-eol ()
+    "Do not show ^M in files containing mixed UNIX and DOS line endings."
+    (interactive)
+    (setq buffer-display-table (make-display-table))
+    (aset buffer-display-table ?\^M []))
+#+end_src
+
 ** Vterm
 
 #+begin_src emacs-lisp
   (use-package vterm)
 #+end_src
 
-** All the icons
+** Exec path
 
 #+begin_src emacs-lisp
-    (use-package all-the-icons
-      :if (display-graphic-p))
-
-    (use-package all-the-icons-dired
-      :hook (dired-mode . all-the-icons-dired-mode))
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize))
 #+end_src
 
 ** Vertico
@@ -463,12 +601,126 @@ Set general variables for sane workflow. 🔥
     (marginalia-mode))
 #+end_src
 
-** Exec path
+** Consult
 
 #+begin_src emacs-lisp
-  (use-package exec-path-from-shell
+  (use-package consult
+    ;; Replace bindings. Lazily loaded due by `use-package'.
+    :bind (;; C-c bindings (mode-specific-map)
+	   ("C-c M-x" . consult-mode-command)
+	   ("C-c h" . consult-history)
+	   ("C-c k" . consult-kmacro)
+	   ("C-c m" . consult-man)
+	   ("C-c i" . consult-info)
+	   ([remap Info-search] . consult-info)
+	   ;; C-x bindings (ctl-x-map)
+	   ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+	   ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+	   ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+	   ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+	   ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+	   ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+	   ;; Custom M-# bindings for fast register access
+	   ("M-#" . consult-register-load)
+	   ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+	   ("C-M-#" . consult-register)
+	   ;; Other custom bindings
+	   ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+	   ;; M-g bindings (goto-map)
+	   ("M-g e" . consult-compile-error)
+	   ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+	   ("M-g g" . consult-goto-line)             ;; orig. goto-line
+	   ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+	   ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+	   ("M-g m" . consult-mark)
+	   ("M-g k" . consult-global-mark)
+	   ("M-g i" . consult-imenu)
+	   ("M-g I" . consult-imenu-multi)
+	   ;; M-s bindings (search-map)
+	   ("M-s d" . consult-find)
+	   ("M-s D" . consult-locate)
+	   ("M-s g" . consult-grep)
+	   ("M-s G" . consult-git-grep)
+	   ("M-s r" . consult-ripgrep)
+	   ("M-s l" . consult-line)
+	   ("M-s L" . consult-line-multi)
+	   ("M-s k" . consult-keep-lines)
+	   ("M-s u" . consult-focus-lines)
+	   ;; Isearch integration
+	   ("M-s e" . consult-isearch-history)
+	   :map isearch-mode-map
+	   ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+	   ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+	   ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+	   ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+	   ;; Minibuffer history
+	   :map minibuffer-local-map
+	   ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+	   ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
+    ;; Enable automatic preview at point in the *Completions* buffer. This is
+    ;; relevant when you use the default completion UI.
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+
+    ;; The :init configuration is always executed (Not lazy)
+    :init
+
+    ;; Optionally configure the register formatting. This improves the register
+    ;; preview for `consult-register', `consult-register-load',
+    ;; `consult-register-store' and the Emacs built-ins.
+    (setq register-preview-delay 0.5
+	  register-preview-function #'consult-register-format)
+
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref
+	  xref-show-definitions-function #'consult-xref)
+
+    ;; Configure other variables and modes in the :config section,
+    ;; after lazily loading the package.
     :config
-    (exec-path-from-shell-initialize))
+
+    ;; Optionally configure preview. The default value
+    ;; is 'any, such that any key triggers the preview.
+    ;; (setq consult-preview-key 'any)
+    ;; (setq consult-preview-key "M-.")
+    ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+    ;; For some commands and buffer sources it is useful to configure the
+    ;; :preview-key on a per-command basis using the `consult-customize' macro.
+    (consult-customize
+     consult-theme :preview-key '(:debounce 0.2 any)
+     consult-ripgrep consult-git-grep consult-grep
+     consult-bookmark consult-recent-file consult-xref
+     consult--source-bookmark consult--source-file-register
+     consult--source-recent-file consult--source-project-recent-file
+     ;; :preview-key "M-."
+     :preview-key '(:debounce 0.4 any))
+
+    ;; Optionally configure the narrowing key.
+    ;; Both < and C-+ work reasonably well.
+    (setq consult-narrow-key "<") ;; "C-+"
+
+    ;; Optionally make narrowing help available in the minibuffer.
+    ;; You may want to use `embark-prefix-help-command' or which-key instead.
+    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+    ;; By default `consult-project-function' uses `project-root' from project.el.
+    ;; Optionally configure a different project root function.
+    ;;;; 1. project.el (the default)
+    ;; (setq consult-project-function #'consult--default-project--function)
+    ;;;; 2. vc.el (vc-root-dir)
+    ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
+    ;;;; 3. locate-dominating-file
+    ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+    ;;;; 4. projectile.el (projectile-project-root)
+    ;; (autoload 'projectile-project-root "projectile")
+    ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
+    ;;;; 5. No project support
+    ;; (setq consult-project-function nil)
+    )
 #+end_src
 
 ** Which Key
@@ -479,6 +731,27 @@ Set general variables for sane workflow. 🔥
     (which-key-mode))
 #+end_src
 
+** All the icons
+
+#+begin_src emacs-lisp
+    (use-package all-the-icons
+      :if (display-graphic-p))
+
+    (use-package all-the-icons-dired
+      :hook (dired-mode . all-the-icons-dired-mode))
+#+end_src
+
+** Multiple Cursors
+
+This is not very important but is cool to experiment with.
+#+begin_src emacs-lisp
+  (use-package multiple-cursors
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->" . mc/mark-next-like-this)
+           ("C-<" . mc/mark-previous-like-this)
+           ("C-c C-<". mc/mark-all-like-this)))
+#+end_src
+
 ** Expand Region
 
 #+begin_src emacs-lisp
@@ -487,102 +760,121 @@ Set general variables for sane workflow. 🔥
            ("C--" . er/contract-region)))
 #+end_src
 
+** Ace-window
+
+#+begin_src emacs-lisp
+    (use-package ace-window
+      :bind ("M-o" . ace-window)) 
+#+end_src
+
+** Avy
+
+#+begin_src emacs-lisp
+      (use-package avy
+	:bind
+	("C-;" . avy-goto-char)
+	("C-:" . avy-goto-char-2)
+	("M-g l" . avy-goto-line)
+	("M-g t" . avy-goto-char-timer))
+
+#+end_src
+
 ** Treemacs
 
 #+begin_src emacs-lisp
-  (use-package treemacs
-    :defer t
-    :config
-    (progn
-      (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-            treemacs-deferred-git-apply-delay        0.5
-            treemacs-directory-name-transformer      #'identity
-            treemacs-display-in-side-window          t
-            treemacs-eldoc-display                   'simple
-            treemacs-file-event-delay                2000
-            treemacs-file-extension-regex            treemacs-last-period-regex-value
-            treemacs-file-follow-delay               0.2
-            treemacs-file-name-transformer           #'identity
-            treemacs-follow-after-init               t
-            treemacs-expand-after-init               t
-            treemacs-find-workspace-method           'find-for-file-or-pick-first
-            treemacs-git-command-pipe                ""
-            treemacs-goto-tag-strategy               'refetch-index
-            treemacs-header-scroll-indicators        '(nil . "^^^^^^")
-            treemacs-hide-dot-git-directory          t
-            treemacs-indentation                     2
-            treemacs-indentation-string              " "
-            treemacs-is-never-other-window           nil
-            treemacs-max-git-entries                 5000
-            treemacs-missing-project-action          'ask
-            treemacs-move-forward-on-expand          nil
-            treemacs-no-png-images                   nil
-            treemacs-no-delete-other-windows         t
-            treemacs-project-follow-cleanup          nil
-            treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-            treemacs-position                        'left
-            treemacs-read-string-input               'from-child-frame
-            treemacs-recenter-distance               0.1
-            treemacs-recenter-after-file-follow      nil
-            treemacs-recenter-after-tag-follow       nil
-            treemacs-recenter-after-project-jump     'always
-            treemacs-recenter-after-project-expand   'on-distance
-            treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-            treemacs-project-follow-into-home        nil
-            treemacs-show-cursor                     nil
-            treemacs-show-hidden-files               t
-            treemacs-silent-filewatch                nil
-            treemacs-silent-refresh                  nil
-            treemacs-sorting                         'alphabetic-asc
-            treemacs-select-when-already-in-treemacs 'move-back
-            treemacs-space-between-root-nodes        t
-            treemacs-tag-follow-cleanup              t
-            treemacs-tag-follow-delay                1.5
-            treemacs-text-scale                      nil
-            treemacs-user-mode-line-format           nil
-            treemacs-user-header-line-format         nil
-            treemacs-wide-toggle-width               70
-            treemacs-width                           35
-            treemacs-width-increment                 1
-            treemacs-width-is-initially-locked       t
-            treemacs-workspace-switch-cleanup        nil)
+  ;; (use-package treemacs
+  ;;   :defer t
+  ;;   :config
+  ;;   (progn
+  ;;     (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+  ;;           treemacs-deferred-git-apply-delay        0.5
+  ;;           treemacs-directory-name-transformer      #'identity
+  ;;           treemacs-display-in-side-window          t
+  ;;           treemacs-eldoc-display                   'simple
+  ;;           treemacs-file-event-delay                2000
+  ;;           treemacs-file-extension-regex            treemacs-last-period-regex-value
+  ;;           treemacs-file-follow-delay               0.2
+  ;;           treemacs-file-name-transformer           #'identity
+  ;;           treemacs-follow-after-init               t
+  ;;           treemacs-expand-after-init               t
+  ;;           treemacs-find-workspace-method           'find-for-file-or-pick-first
+  ;;           treemacs-git-command-pipe                ""
+  ;;           treemacs-goto-tag-strategy               'refetch-index
+  ;;           treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+  ;;           treemacs-hide-dot-git-directory          t
+  ;;           treemacs-indentation                     2
+  ;;           treemacs-indentation-string              " "
+  ;;           treemacs-is-never-other-window           nil
+  ;;           treemacs-max-git-entries                 5000
+  ;;           treemacs-missing-project-action          'ask
+  ;;           treemacs-move-forward-on-expand          nil
+  ;;           treemacs-no-png-images                   nil
+  ;;           treemacs-no-delete-other-windows         t
+  ;;           treemacs-project-follow-cleanup          nil
+  ;;           treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+  ;;           treemacs-position                        'left
+  ;;           treemacs-read-string-input               'from-child-frame
+  ;;           treemacs-recenter-distance               0.1
+  ;;           treemacs-recenter-after-file-follow      nil
+  ;;           treemacs-recenter-after-tag-follow       nil
+  ;;           treemacs-recenter-after-project-jump     'always
+  ;;           treemacs-recenter-after-project-expand   'on-distance
+  ;;           treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+  ;;           treemacs-project-follow-into-home        nil
+  ;;           treemacs-show-cursor                     nil
+  ;;           treemacs-show-hidden-files               t
+  ;;           treemacs-silent-filewatch                nil
+  ;;           treemacs-silent-refresh                  nil
+  ;;           treemacs-sorting                         'alphabetic-asc
+  ;;           treemacs-select-when-already-in-treemacs 'move-back
+  ;;           treemacs-space-between-root-nodes        t
+  ;;           treemacs-tag-follow-cleanup              t
+  ;;           treemacs-tag-follow-delay                1.5
+  ;;           treemacs-text-scale                      nil
+  ;;           treemacs-user-mode-line-format           nil
+  ;;           treemacs-user-header-line-format         nil
+  ;;           treemacs-wide-toggle-width               70
+  ;;           treemacs-width                           35
+  ;;           treemacs-width-increment                 1
+  ;;           treemacs-width-is-initially-locked       t
+  ;;           treemacs-workspace-switch-cleanup        nil)
 
-      ;; The default width and height of the icons is 22 pixels. If you are
-      ;; using a Hi-DPI display, uncomment this to double the icon size.
-      ;;(treemacs-resize-icons 44)
+  ;;     ;; The default width and height of the icons is 22 pixels. If you are
+  ;;     ;; using a Hi-DPI display, uncomment this to double the icon size.
+  ;;     ;;(treemacs-resize-icons 44)
 
-      (treemacs-follow-mode t)
-      (treemacs-filewatch-mode t)
-      (treemacs-fringe-indicator-mode 'always)
-      (when treemacs-python-executable
-        (treemacs-git-commit-diff-mode t))
+  ;;     (treemacs-follow-mode t)
+  ;;     (treemacs-filewatch-mode t)
+  ;;     (treemacs-fringe-indicator-mode 'always)
+  ;;     (when treemacs-python-executable
+  ;;       (treemacs-git-commit-diff-mode t))
 
-      (pcase (cons (not (null (executable-find "git")))
-                   (not (null treemacs-python-executable)))
-        (`(t . t)
-         (treemacs-git-mode 'deferred))
-        (`(t . _)
-         (treemacs-git-mode 'simple)))
+  ;;     (pcase (cons (not (null (executable-find "git")))
+  ;;                  (not (null treemacs-python-executable)))
+  ;;       (`(t . t)
+  ;;        (treemacs-git-mode 'deferred))
+  ;;       (`(t . _)
+  ;;        (treemacs-git-mode 'simple)))
 
-      (treemacs-hide-gitignored-files-mode nil))
-    :bind
-    (:map global-map
-          ("M-0"       . treemacs-select-window)
-          ("C-x t 1"   . treemacs-delete-other-windows)
-          ("C-x t t"   . treemacs)
-          ("C-x t d"   . treemacs-select-directory)
-          ("C-x t B"   . treemacs-bookmark)
-          ("C-x t C-t" . treemacs-find-file)
-          ("C-x t M-t" . treemacs-find-tag)))
+  ;;     (treemacs-hide-gitignored-files-mode nil))
+  ;;   :bind
+  ;;   (:map global-map
+  ;;         ("M-0"       . treemacs-select-window)
+  ;;         ("C-x t 1"   . treemacs-delete-other-windows)
+  ;;         ("C-x t t"   . treemacs)
+  ;;         ("C-x t d"   . treemacs-select-directory)
+  ;;         ("C-x t B"   . treemacs-bookmark)
+  ;;         ("C-x t C-t" . treemacs-find-file)
+  ;;         ("C-x t M-t" . treemacs-find-tag)))
 
-  (use-package treemacs-magit
-    :after (treemacs magit)
-    :ensure t)
+  ;; (use-package treemacs-magit
+  ;;   :after (treemacs magit)
+  ;;   :ensure t)
 
-  (use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
-    :after (treemacs persp-mode) ;;or perspective vs. persp-mode
-    :ensure t
-    :config (treemacs-set-scope-type 'Perspectives))
+  ;; (use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
+  ;;   :after (treemacs persp-mode) ;;or perspective vs. persp-mode
+  ;;   :ensure t
+  ;;   :config (treemacs-set-scope-type 'Perspectives))
 #+end_src
 
 ** Dired
@@ -617,17 +909,6 @@ Set general variables for sane workflow. 🔥
                 ("z" . dired-hide-dotfiles-mode)))
 #+end_src
 
-** Multiple Cursors
-
-This is not very important but is cool to experiment with.
-#+begin_src emacs-lisp
-  (use-package multiple-cursors
-    :bind (("C-S-c C-S-c" . mc/edit-lines)
-           ("C->" . mc/mark-next-like-this)
-           ("C-<" . mc/mark-previous-like-this)
-           ("C-c C-<". mc/mark-all-like-this)))
-#+end_src
-
 ** Emoji
 
 #+begin_src emacs-lisp
@@ -640,6 +921,12 @@ This is not very important but is cool to experiment with.
       (setq emojify-display-style 'unicode)
       (setq emojify-emoji-styles '(github))
       :bind ("C-c C-." . emojify-insert-emoji))
+#+end_src
+
+** Beacon
+
+#+begin_src emacs-lisp
+  (use-package beacon)
 #+end_src
 
 
