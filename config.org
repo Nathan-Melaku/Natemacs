@@ -2,20 +2,6 @@
 #+AUTHOR: Nathan Melaku
 #+OPTIONS: toc:2
 
-This is Natemacs, My emacs config. Main use case of emacs is mainly Note taking,
-Frontend development, Simple Java programming, example when studing for ocjp.
-
-|----+-----------------------------|
-| No | Use case                    |
-|----+-----------------------------|
-|  1 | Note taking                 |
-|  2 | Frontend Development        |
-|  3 | Simple Java Programming     |
-|  4 | Editing configuration files |
-|  5 | :TODO Latex                 |
-|  6 | Basic File Management       |
-|----+-----------------------------|
-
 * Table Of Contents     :noexport:TOC_2:
 - [[#general-defaults][General Defaults]]
 - [[#package-management][Package Management]]
@@ -38,16 +24,18 @@ Frontend development, Simple Java programming, example when studing for ocjp.
   - [[#origami][Origami]]
   - [[#editor-config][Editor config]]
   - [[#projectile][Projectile]]
-  - [[#yaml][Yaml]]
-  - [[#json][Json]]
-  - [[#lua][lua]]
-  - [[#web-mode][Web mode]]
   - [[#company][Company]]
   - [[#magit][Magit]]
+  - [[#eglot][Eglot]]
   - [[#prettier-js][Prettier js]]
   - [[#restclient][RestClient]]
   - [[#devdocs-browser][DevDocs Browser]]
   - [[#docker][Docker]]
+  - [[#yaml][Yaml]]
+  - [[#json][Json]]
+  - [[#lua][lua]]
+  - [[#web-mode][Web mode]]
+  - [[#latex][LaTeX]]
 - [[#utils][Utils]]
   - [[#pdf-tools][Pdf Tools]]
   - [[#epub][Epub]]
@@ -333,7 +321,9 @@ Set general variables for sane workflow. 🔥
 ** Origami
 
 #+begin_src emacs-lisp
-  (use-package origami)
+  (use-package origami
+    :bind(:map origami-mode-map
+	       ("C-<tab>" . origami-toggle-node)))
 #+end_src
 
 ** Editor config
@@ -353,6 +343,71 @@ Set general variables for sane workflow. 🔥
     :bind (:map projectile-mode-map
     ("C-c p" . projectile-command-map)))
 
+#+end_src
+
+** Company
+
+
+#+begin_src emacs-lisp
+  (use-package company
+    :config 
+    (global-company-mode t)
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
+#+end_src
+
+** Magit
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :bind (("C-x g" . magit-status)))
+#+end_src
+
+** Eglot
+
+#+begin_src emacs-lisp
+    (use-package eglot
+      :ensure nil
+      :bind (:map eglot-mode-map
+	     ("C-c ." . eglot-find-typeDefinition)))
+#+end_src
+
+** Prettier js
+
+#+begin_src emacs-lisp
+  (defun enable-minor-mode (my-pair)
+    "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+    (if (buffer-file-name)
+        (if (string-match (car my-pair) buffer-file-name)
+            (funcall (cdr my-pair)))))
+
+  (use-package prettier-js
+    :ensure t)
+  (add-hook 'web-mode-hook #'(lambda ()
+                               (enable-minor-mode
+                                '("\\.jsx?\\'" . prettier-js-mode))
+                               (enable-minor-mode
+                                '("\\.tsx?\\'" . prettier-js-mode))))
+#+end_src
+
+** RestClient
+
+#+begin_src emacs-lisp
+  (use-package restclient)
+#+end_src
+
+** DevDocs Browser
+
+#+begin_src emacs-lisp
+  (use-package devdocs-browser
+    :defer t)
+#+end_src
+
+** Docker
+
+#+begin_src emacs-lisp
+  (use-package docker)
 #+end_src
 
 ** Yaml
@@ -394,60 +449,28 @@ Set general variables for sane workflow. 🔥
            ("\\.html\\'" . web-mode))
     :commands web-mode)
 #+end_src
-
-** Company
-
-#+begin_src emacs-lisp
-  (use-package company
-    :config 
-    (global-company-mode t)
-    :custom
-    (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
-#+end_src
-
-** Magit
+** LaTeX
 
 #+begin_src emacs-lisp
-  (use-package magit
-    :bind (("C-x g" . magit-status)))
-#+end_src
-
-** Prettier js
-
-#+begin_src emacs-lisp
-  (defun enable-minor-mode (my-pair)
-    "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
-    (if (buffer-file-name)
-        (if (string-match (car my-pair) buffer-file-name)
-            (funcall (cdr my-pair)))))
-
-  (use-package prettier-js
-    :ensure t)
-  (add-hook 'web-mode-hook #'(lambda ()
-                               (enable-minor-mode
-                                '("\\.jsx?\\'" . prettier-js-mode))
-                               (enable-minor-mode
-                                '("\\.tsx?\\'" . prettier-js-mode))))
-#+end_src
-
-** RestClient
-
-#+begin_src emacs-lisp
-  (use-package restclient)
-#+end_src
-
-** DevDocs Browser
-
-#+begin_src emacs-lisp
-  (use-package devdocs-browser
-    :defer t)
-#+end_src
-
-** Docker
-
-#+begin_src emacs-lisp
-  (use-package docker)
+  (use-package tex
+    :ensure auctex
+    :config
+    ;; Your AUCTeX-specific configurations go here.
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    (setq-default TeX-master nil)
+    (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+    (setq reftex-plug-into-AUCTeX t)
+					  ; Set Emacs as the default PDF viewer for AUCTeX
+    (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+	  TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+	  TeX-source-correlate-start-server t)
+    ;; Enable TeX-source-correlate-mode for bidirectional navigation between TeX and PDF
+    (add-hook 'TeX-after-compilation-finished-functions
+	      #'TeX-revert-document-buffer)
+    (add-hook 'TeX-mode-hook 'TeX-source-correlate-mode))
 #+end_src
 
 * Utils

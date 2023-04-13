@@ -1,3 +1,18 @@
+* Introduction
+This is Natemacs, My emacs config. Main use case of emacs is mainly Note taking,
+Frontend development, Simple Java programming, example when studing for ocjp.
+
+|----+-----------------------------|
+| No | Use case                    |
+|----+-----------------------------|
+|  1 | Note taking                 |
+|  2 | Frontend Development        |
+|  3 | Simple Java Programming     |
+|  4 | Editing configuration files |
+|  5 | Latex                       |
+|  6 | Basic File Management       |
+|----+-----------------------------|
+
 * Installation
 
 Requred Packages
