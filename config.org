@@ -3,7 +3,7 @@
 #+OPTIONS: toc:2
 
 This is Natemacs, My emacs config. Main use case of emacs is mainly Note taking,
-Frontend development, Simple Java programming, example when studing for ocjp.
+Frontend development, Simple Java programming.
 
 |----+-----------------------------|
 | No | Use case                    |
@@ -147,7 +147,7 @@ Set general variables for sane workflow. 🔥
   #+BEGIN_SRC emacs-lisp
     (use-package doom-themes
       :config
-      (load-theme 'doom-henna t)
+      (load-theme 'doom-gruvbox t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
@@ -221,7 +221,6 @@ Set general variables for sane workflow. 🔥
     (visual-line-mode 1))
 
   (use-package org
-    :ensure nil
     :custom
     (org-directory "~/Documents/Org")
     (org-log-into-drawer t)
