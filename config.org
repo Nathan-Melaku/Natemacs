@@ -27,6 +27,7 @@ Frontend development, Simple Java programming.
   - [[#font][Font]]
   - [[#modeline][Modeline]]
   - [[#useful-config][Useful Config]]
+  - [[#evil-setup][EVIL setup]]
 - [[#org-mode][Org Mode]]
   - [[#org-bullets][Org bullets]]
   - [[#configure-org][Configure org]]
@@ -34,23 +35,24 @@ Frontend development, Simple Java programming.
   - [[#org-tree-slide][Org tree slide]]
   - [[#org-roam][Org Roam]]
   - [[#org-toc][Org toc]]
-- [[#programming-stuff][Programming Stuff]]
+- [[#general-programming-stuff][General Programming Stuff]]
   - [[#yasnippet][Yasnippet]]
-  - [[#origami][Origami]]
   - [[#treesitter][Treesitter]]
   - [[#editor-config][Editor config]]
+  - [[#origami][Origami]]
   - [[#lsp][Lsp]]
-  - [[#yaml][Yaml]]
-  - [[#json][Json]]
-  - [[#lua][lua]]
-  - [[#web-mode][Web mode]]
   - [[#company][Company]]
   - [[#magit][Magit]]
-  - [[#prettier-js][Prettier js]]
-  - [[#java][Java]]
   - [[#restclient][RestClient]]
   - [[#devdocs-browser][DevDocs Browser]]
+  - [[#yaml][Yaml]]
   - [[#docker][Docker]]
+  - [[#json][Json]]
+  - [[#web-mode][Web mode]]
+  - [[#astro][Astro]]
+  - [[#prettier-js][Prettier js]]
+  - [[#lua][lua]]
+  - [[#java][Java]]
 - [[#utils][Utils]]
   - [[#pdf-tools][Pdf Tools]]
   - [[#epub][Epub]]
@@ -124,7 +126,7 @@ Set general variables for sane workflow. 🔥
 
   ;; add line numbers
   (column-number-mode)
-
+  (electric-pair-mode 1)
   (global-display-line-numbers-mode t)
   (setq display-line-numbers-type t)
   (dolist (mode '(term-mode-hook
@@ -138,6 +140,7 @@ Set general variables for sane workflow. 🔥
 		  eww-mode-hook
 		  nov-mode-hook
 		  markdown-mode-hook
+		  eat-mode-hook
 		  pdf-view-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
@@ -147,7 +150,7 @@ Set general variables for sane workflow. 🔥
   #+BEGIN_SRC emacs-lisp
     (use-package doom-themes
       :config
-      (load-theme 'doom-gruvbox t)
+      (load-theme 'doom-ayu-mirage t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
@@ -200,6 +203,14 @@ Set general variables for sane workflow. 🔥
 
 
 #+end_src
+
+** EVIL setup
+
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :init
+    (evil-mode 1))
+#+END_SRC
 
 * Org Mode
 ** Org bullets
@@ -306,7 +317,8 @@ Set general variables for sane workflow. 🔥
          (markdown-mode . toc-org-mode)))
 #+end_src
 
-* Programming Stuff
+* General Programming Stuff
+
 ** Yasnippet
 
 #+BEGIN_SRC emacs-lisp
@@ -315,21 +327,13 @@ Set general variables for sane workflow. 🔥
     (setq yas-snippet-dirs '("~/Tools/yasnippet"))
     (yas-global-mode 1))
 #+END_SRC
-** Origami
-
-#+begin_src emacs-lisp
-  (use-package origami)
-#+end_src
-
 ** Treesitter
 
 #+begin_src emacs-lisp
-  (use-package tree-sitter-langs)
-  (use-package tree-sitter
-    :init
-    (global-tree-sitter-mode)
-    :hook
-    (tree-sitter-after-on-hook . tree-sitter-hl-mode))
+  (setq treesit-language-source-alist
+	'((astro "https://github.com/virchau13/tree-sitter-astro")
+	  (css "https://github.com/tree-sitter/tree-sitter-css")
+	  (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))
 #+end_src
 
 ** Editor config
@@ -338,6 +342,12 @@ Set general variables for sane workflow. 🔥
   (use-package editorconfig
     :config
     (editorconfig-mode 1))
+#+end_src
+
+** Origami
+
+#+begin_src emacs-lisp
+  (use-package origami)
 #+end_src
 
 ** Lsp
@@ -365,47 +375,6 @@ Set general variables for sane workflow. 🔥
   (global-set-key (kbd "C-c N") #'flymake-goto-next-error)
   (global-set-key (kbd "C-c P") #'flymake-goto-prev-error)
 #+end_src
-
-** Yaml
-
-#+begin_src emacs-lisp
-  (use-package yaml-mode)
-#+end_src
-
-** Json
-
-#+begin_src emacs-lisp
-  (use-package json-mode)
-#+end_src
-
-** lua
-
-#+begin_src emacs-lisp
-  (use-package lua-mode)
-#+end_src
-
-** Web mode
-
-#+begin_src emacs-lisp
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-attr-indent-offset 0)
-  (setq web-mode-enable-auto-indentation t)
-  (setq web-mode-enable-auto-closing t)
-  (setq web-mode-enable-auto-pairing t)
-  (setq web-mode-enable-css-colorization t)
-  
-  (use-package web-mode
-    :mode (("\\.js\\'" . web-mode)
-           ("\\.jsx\\'" . web-mode)
-           ("\\.ts\\'" . web-mode)
-           ("\\.tsx\\'" . web-mode)
-           ("\\.svelte\\'" . web-mode)
-           ("\\.html\\'" . web-mode))
-    :commands web-mode)
-#+end_src
-
 ** Company
 
 #+begin_src emacs-lisp
@@ -422,6 +391,66 @@ Set general variables for sane workflow. 🔥
 #+begin_src emacs-lisp
   (use-package magit
     :bind (("C-x g" . magit-status)))
+#+end_src
+
+** RestClient
+
+#+begin_src emacs-lisp
+  (use-package restclient)
+#+end_src
+
+** DevDocs Browser
+
+#+begin_src emacs-lisp
+  (use-package devdocs-browser
+    :defer t)
+#+end_src
+
+** Yaml
+
+#+begin_src emacs-lisp
+  (use-package yaml-mode)
+#+end_src
+
+** Docker
+
+#+begin_src emacs-lisp
+  (use-package docker)
+  (use-package docker-compose-mode)
+#+end_src
+
+** Json
+
+#+begin_src emacs-lisp
+  (use-package json-mode)
+#+end_src
+
+** Web mode
+
+#+begin_src emacs-lisp
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-attr-indent-offset 0)
+  (setq web-mode-enable-auto-indentation t)
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-css-colorization t)
+
+  (use-package web-mode
+    :mode (("\\.svelte\\'" . web-mode)
+	   ("\\.html\\'" . web-mode)
+	   ("\\.css\\'" . web-mode)
+	   ("\\.sass\\'". web-mode )
+	   ("\\.scss\\'". web-mode ))
+    :commands web-mode)
+#+end_src
+
+** Astro
+
+#+begin_src emacs-lisp
+  (use-package astro-ts-mode
+    :ensure t)
 #+end_src
 
 ** Prettier js
@@ -442,31 +471,18 @@ Set general variables for sane workflow. 🔥
                                 '("\\.tsx?\\'" . prettier-js-mode))))
 #+end_src
 
+** lua
+
+#+begin_src emacs-lisp
+  (use-package lua-mode)
+#+end_src
+
 ** Java
 
 #+begin_src emacs-lisp
     (use-package lsp-java
       :hook (java-mode-hook . lsp))
 
-#+end_src
-
-** RestClient
-
-#+begin_src emacs-lisp
-  (use-package restclient)
-#+end_src
-
-** DevDocs Browser
-
-#+begin_src emacs-lisp
-  (use-package devdocs-browser
-    :defer t)
-#+end_src
-
-** Docker
-
-#+begin_src emacs-lisp
-  (use-package docker)
 #+end_src
 
 * Utils
