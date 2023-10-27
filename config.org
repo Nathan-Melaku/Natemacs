@@ -26,8 +26,6 @@ Frontend development, Simple Java programming.
   - [[#font][Font]]
   - [[#modeline][Modeline]]
   - [[#useful-config][Useful Config]]
-  - [[#evil-setup][Evil setup]]
-- [[#org-mode][Org Mode]]
   - [[#org-bullets][Org bullets]]
   - [[#configure-org][Configure org]]
   - [[#visual-fill-column][Visual fill column]]
@@ -70,6 +68,7 @@ Frontend development, Simple Java programming.
   - [[#avy][Avy]]
   - [[#dired][Dired]]
   - [[#emoji][Emoji]]
+  - [[#evil-setup][Evil setup]]
 
 * General Defaults
 
@@ -204,57 +203,8 @@ Set general variables for sane workflow. 🔥
 
 #+end_src
 
-** Evil setup
-Finally I am embracing evil. 🥹
-#+BEGIN_SRC emacs-lisp
-  (defun nate/evil-hook()
-    (dolist (mode '(custom-mode
-		    eshell-mode
-		    git-rebase-mode
-		    erc-mode
-		    vterm-mode
-		    eat-mode
-		    term-mode))
-      (add-to-list 'evil-emacs-state-modes mode)))
 
-  (use-package evil
 
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-i-jump nil)
-
-    :hook
-    (evil-mode . nate/evil-hook)
-
-    :config
-    (evil-mode 1)
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    ;; Use visual line motions even outside of visual-line-mode buffers
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-    (evil-set-initial-state 'messages-buffer-mode 'normal))
-
-  (use-package evil-collection
-    :after evil
-    :config
-    (evil-collection-init))
-
-  (use-package general
-    :config
-    (general-evil-setup t)
-    (general-create-definer nate/leader-keys
-      :keymaps '(normal insert visual emacs)
-      :prefix "SPC"
-      :global-prefix "C-SPC")
-    (nate/leader-keys
-      "t" '(:ignore t :which-key "toggles")
-      "tt" '(consult-theme :which-key "choose theme")
-      "m" '(magit :which-key "magit")))
-#+END_SRC
-
-* Org Mode
 ** Org bullets
 
   #+BEGIN_SRC emacs-lisp
@@ -282,28 +232,29 @@ Finally I am embracing evil. 🥹
     (org-hide-emphasis-markers nil)
     :config
     (setq org-list-demote-modify-bullet
-          (quote (("+" . "-")
-                  ("-" . "+")
-                  ("*" . "-")
-                  ("1." . "-")
-                  ("1)" . "-")
-                  ("A)" . "-")
-                  ("B)" . "-")
-                  ("a)" . "-")
-                  ("b)" . "-")
-                  ("A." . "-")
-                  ("B." . "-")
-                  ("a." . "-")
-                  ("b." . "-")))))
+	  (quote (("+" . "-")
+		  ("-" . "+")
+		  ("*" . "-")
+		  ("1." . "-")
+		  ("1)" . "-")
+		  ("A)" . "-")
+		  ("B)" . "-")
+		  ("a)" . "-")
+		  ("b)" . "-")
+		  ("A." . "-")
+		  ("B." . "-")
+		  ("a." . "-")
+		  ("b." . "-")))))
 #+end_src
 
 #+begin_src emacs-lisp
+  
   (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+			  '(("^ *\\([-]\\) "
+			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
   (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([+]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
+			  '(("^ *\\([+]\\) "
+			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
 #+end_src
 
 ** Visual fill column
@@ -319,6 +270,7 @@ Finally I am embracing evil. 🥹
   (use-package visual-fill-column
     :hook
     (org-mode . nate/org-mode-visual-fill)
+    (org-mode . nate/org-mode-setup)
     (Markdown-mode . nate/org-mode-visual-fill))
 #+end_src
 
@@ -366,7 +318,7 @@ Finally I am embracing evil. 🥹
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :config
-    (setq yas-snippet-dirs '("~/Tools/yasnippet"))
+    (setq yas-snippet-dirs '("~/Tools/yasnippet-snippets/snippets"))
     (yas-global-mode 1))
 #+END_SRC
 ** Treesitter
@@ -925,5 +877,52 @@ This is not very important but is cool to experiment with.
       :bind ("C-c C-." . emojify-insert-emoji))
 #+end_src
 
+** Evil setup
+Finally I am embracing evil. 🥹
+#+BEGIN_SRC emacs-lisp
+  (defun nate/evil-hook()
+    (dolist (mode '(custom-mode
+		    eshell-mode
+		    git-rebase-mode
+		    erc-mode
+		    vterm-mode
+		    eat-mode
+		    term-mode))
+      (add-to-list 'evil-emacs-state-modes mode)))
 
+  (use-package evil
 
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+
+    :hook
+    (evil-mode . nate/evil-hook)
+
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+    (evil-set-initial-state 'messages-buffer-mode 'normal))
+
+  (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
+
+  (use-package general
+    :config
+    (general-evil-setup t)
+    (general-create-definer nate/leader-keys
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC")
+    (nate/leader-keys
+      "t" '(:ignore t :which-key "toggles")
+      "tt" '(consult-theme :which-key "choose theme")
+      "m" '(magit :which-key "magit")))
+#+END_SRC
