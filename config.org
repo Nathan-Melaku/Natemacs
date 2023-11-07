@@ -147,28 +147,11 @@ Set general variables for sane workflow. 🔥
 ** Set Theme
 
   #+BEGIN_SRC emacs-lisp
-    (use-package doom-themes
+    (use-package catppuccin-theme
       :config
-      (load-theme 'doom-ayu-mirage t)
-
-      ;; Enable flashing mode-line on errors
-      (doom-themes-visual-bell-config)
-
-      ;; Corrects (and improves) org-mode's native fontification.
-      (doom-themes-org-config))
-
-    ;; remove background color on terminal emacs
-    (defun on-frame-open (frame)
-      (if (not (display-graphic-p frame))
-          (set-face-background 'default "unspecified-bg" frame)))
-    (on-frame-open (selected-frame))
-
-    (defun on-after-init ()
-      (unless (display-graphic-p (selected-frame))
-        (set-face-background 'default "unspecified-bg" (selected-frame))))
-
-    (add-hook 'after-make-frame-functions 'on-frame-open)
-    (add-hook 'window-setup-hook 'on-after-init)
+      (load-theme 'catppuccin :no-confirm)
+      (setq catppuccin-flavor 'mocha)
+      (catppuccin-reload))
    #+END_SRC
 
 ** Font
