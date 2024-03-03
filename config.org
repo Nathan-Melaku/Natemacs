@@ -51,6 +51,7 @@ Frontend development, Simple Java programming.
   - [[#lua][lua]]
   - [[#java][Java]]
 - [[#utils][Utils]]
+  - [[#god-mode][God mode]]
   - [[#pdf-tools][Pdf Tools]]
   - [[#latex][Latex]]
   - [[#epub][Epub]]
@@ -68,7 +69,6 @@ Frontend development, Simple Java programming.
   - [[#avy][Avy]]
   - [[#dired][Dired]]
   - [[#emoji][Emoji]]
-  - [[#evil-setup][Evil setup]]
 
 * General Defaults
 
@@ -463,6 +463,19 @@ Set general variables for sane workflow. 🔥
 #+end_src
 
 * Utils
+** God mode
+#+begin_src emacs-lisp
+    (use-package god-mode
+      :init
+      (setq god-exempt-major-modes nil)
+      (setq god-exempt-predicates nil)
+      (setq god-mode-enable-function-key-translation nil)
+      :bind (
+             ("<escape>" . god-local-mode))
+      :config
+      (god-mode))
+#+end_src
+
 ** Pdf Tools
 
 #+begin_src emacs-lisp
@@ -470,7 +483,6 @@ Set general variables for sane workflow. 🔥
     :config
     (pdf-tools-install))
 #+end_src
-
 ** Latex
 #+begin_src emacs-lisp
   (use-package latex
@@ -860,52 +872,3 @@ This is not very important but is cool to experiment with.
       :bind ("C-c C-." . emojify-insert-emoji))
 #+end_src
 
-** Evil setup
-Finally I am embracing evil. 🥹
-#+BEGIN_SRC emacs-lisp
-  (defun nate/evil-hook()
-    (dolist (mode '(custom-mode
-		    eshell-mode
-		    git-rebase-mode
-		    erc-mode
-		    vterm-mode
-		    eat-mode
-		    term-mode))
-      (add-to-list 'evil-emacs-state-modes mode)))
-
-  (use-package evil
-
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-i-jump nil)
-
-    :hook
-    (evil-mode . nate/evil-hook)
-
-    :config
-    (evil-mode 1)
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    ;; Use visual line motions even outside of visual-line-mode buffers
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-    (evil-set-initial-state 'messages-buffer-mode 'normal))
-
-  (use-package evil-collection
-    :after evil
-    :config
-    (evil-collection-init))
-
-  (use-package general
-    :config
-    (general-evil-setup t)
-    (general-create-definer nate/leader-keys
-      :keymaps '(normal insert visual emacs)
-      :prefix "SPC"
-      :global-prefix "C-SPC")
-    (nate/leader-keys
-      "t" '(:ignore t :which-key "toggles")
-      "tt" '(consult-theme :which-key "choose theme")
-      "m" '(magit :which-key "magit")))
-#+END_SRC
